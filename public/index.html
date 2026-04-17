@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Visitor Check-In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Idle Screen -->
+  <div id="idle" class="screen active" onclick="startCheckin()">
+    <div class="idle-content">
+      <div id="logoContainer" class="logo-container"></div>
+      <div class="tap-prompt">
+        <div class="tap-pulse"></div>
+        <h1 id="companyName">Visitor Check-In</h1>
+        <p>Tap anywhere to begin</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Select Host -->
+  <div id="step1" class="screen">
+    <div class="form-card">
+      <div class="step-header">
+        <button class="btn-back" onclick="goIdle()">← Back</button>
+        <div class="step-indicator">
+          <span class="step active">1</span>
+          <span class="step-line"></span>
+          <span class="step">2</span>
+          <span class="step-line"></span>
+          <span class="step">3</span>
+        </div>
+      </div>
+      <h2>Who are you here to see?</h2>
+      <div id="employeeGrid" class="employee-grid"></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Visitor Details -->
+  <div id="step2" class="screen">
+    <div class="form-card">
+      <div class="step-header">
+        <button class="btn-back" onclick="showScreen('step1')">← Back</button>
+        <div class="step-indicator">
+          <span class="step done">1</span>
+          <span class="step-line active"></span>
+          <span class="step active">2</span>
+          <span class="step-line"></span>
+          <span class="step">3</span>
+        </div>
+      </div>
+      <h2>Your Details</h2>
+      <p class="visiting-label">Visiting: <strong id="hostDisplay"></strong></p>
+
+      <div class="form-group">
+        <input id="firstName" type="text" placeholder="First Name" autocomplete="off" oninput="onNameInput()" />
+        <input id="lastName" type="text" placeholder="Last Name" autocomplete="off" oninput="onNameInput()" />
+        <input id="company" type="text" placeholder="Company" autocomplete="off" />
+      </div>
+
+      <div id="returningBadge" class="returning-badge hidden">
+        Welcome back! We've filled in your details.
+      </div>
+
+      <button class="btn-primary" id="checkinBtn" onclick="submitForm()">Check In</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Success -->
+  <div id="step3" class="screen">
+    <div class="form-card success-card">
+      <span class="checkmark">✓</span>
+      <h2>You're checked in!</h2>
+      <p id="successMessage"></p>
+      <div class="countdown-bar">
+        <div id="countdownFill" class="countdown-fill"></div>
+      </div>
+      <p class="countdown-text">Returning to home in <span id="countdown">5</span>s</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
