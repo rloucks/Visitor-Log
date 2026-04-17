@@ -218,6 +218,53 @@ async function addEmployee() {
   }
 }
 
+async function importCSV() {
+  const file = document.getElementById('csvFile').files[0];
+  const resultEl = document.getElementById('csvResult');
+
+  if (!file) { showToast('Please select a CSV file.', 'error'); return; }
+
+  const text = await file.text();
+  const lines = text.trim().split(/\r?\n/);
+
+  if (lines.length < 2) { showToast('CSV has no data rows.', 'error'); return; }
+
+  // Parse header to find column positions (case-insensitive)
+  const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const col = name => header.indexOf(name);
+  const nameIdx  = col('name');
+  const emailIdx = col('email');
+  const slackIdx = col('slackuserid');
+
+  if (nameIdx === -1) { showToast('CSV must have a "name" column.', 'error'); return; }
+
+  let added = 0, skipped = 0;
+  resultEl.textContent = 'Importing…';
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const name = cols[nameIdx];
+    if (!name) { skipped++; continue; }
+
+    const res = await fetch('/api/admin/employees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email:       emailIdx !== -1 ? cols[emailIdx] || '' : '',
+        slackUserId: slackIdx !== -1 ? cols[slackIdx] || '' : ''
+      })
+    });
+
+    if (res.ok) added++; else skipped++;
+  }
+
+  document.getElementById('csvFile').value = '';
+  resultEl.textContent = `Done — ${added} added, ${skipped} skipped.`;
+  loadEmployees();
+  showToast(`Imported ${added} employee${added !== 1 ? 's' : ''}.`);
+}
+
 async function deleteEmployee(id) {
   if (!confirm('Remove this employee?')) return;
   const res = await fetch(`/api/admin/employees/${id}`, { method: 'DELETE' });

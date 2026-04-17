@@ -93,9 +93,20 @@
           <div class="input-row">
             <input class="admin-input" id="empName"  placeholder="Full Name" />
             <input class="admin-input" id="empEmail" placeholder="Email (optional)" />
-            <input class="admin-input" id="empSlack" placeholder="Slack User ID (optional)" />
+            <input class="admin-input" id="empSlack" placeholder="Slack User ID e.g. U0123456789" />
             <button class="btn btn-white" onclick="addEmployee()">Add</button>
           </div>
+        </div>
+        <div class="card">
+          <h3>Import from CSV</h3>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            CSV format: <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">name,email,slackUserId</code> — first row must be the header.
+          </p>
+          <div class="input-row">
+            <input type="file" id="csvFile" accept=".csv,text/csv" class="admin-input" style="max-width:300px;" />
+            <button class="btn btn-white" onclick="importCSV()">Import</button>
+          </div>
+          <p id="csvResult" style="margin-top:10px;font-size:0.82rem;color:rgba(255,255,255,0.4);"></p>
         </div>
         <div class="card">
           <h3>Employee List</h3>
@@ -156,6 +167,11 @@
             <select class="admin-input" id="settingBg" style="max-width:220px;">
               <option value="particles">Particles</option>
               <option value="waves">Waves</option>
+              <option value="matrix">Matrix Rain</option>
+              <option value="radar">Radar Sweep</option>
+              <option value="starfield">Starfield</option>
+              <option value="circuit">Circuit Board</option>
+              <option value="hexgrid">Hex Grid (HUD)</option>
               <option value="none">None (plain black)</option>
             </select>
           </div>
