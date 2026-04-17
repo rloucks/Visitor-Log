@@ -39,11 +39,31 @@ router.post('/checkin', async (req, res) => {
     VALUES (?, ?, ?, ?)
   `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim());
 
-  if (process.env.SLACK_WEBHOOK_URL) {
+  // Look up the host's Slack user ID from employees table
+  const employee = db.prepare('SELECT slackUserId FROM employees WHERE LOWER(name) = LOWER(?)').get(host.trim());
+  const hostSlackId = employee?.slackUserId || null;
+
+  const payload = {
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    company: company?.trim() || '',
+    host: host.trim(),
+    hostSlackId: hostSlackId || ''
+  };
+
+  // Prefer n8n webhook (handles Slack + Google Calendar)
+  if (process.env.N8N_WEBHOOK_URL) {
     try {
-      const companyStr = company?.trim() ? ` from *${company.trim()}*` : '';
+      await axios.post(process.env.N8N_WEBHOOK_URL, payload);
+    } catch (err) {
+      console.error('n8n webhook failed:', err.message);
+    }
+  } else if (process.env.SLACK_WEBHOOK_URL) {
+    // Fallback: direct Slack webhook if n8n not configured
+    try {
+      const companyStr = payload.company ? ` from *${payload.company}*` : '';
       await axios.post(process.env.SLACK_WEBHOOK_URL, {
-        text: `:wave: *Visitor Check-In*\n*${firstName.trim()} ${lastName.trim()}*${companyStr} has arrived to see *${host.trim()}*.`
+        text: `:wave: *Visitor Check-In*\n*${payload.firstName} ${payload.lastName}*${companyStr} has arrived to see *${payload.host}*.`
       });
     } catch (err) {
       console.error('Slack notification failed:', err.message);
