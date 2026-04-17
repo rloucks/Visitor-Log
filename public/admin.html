@@ -24,6 +24,7 @@
         <button class="nav-item"         data-section="visitors">Visitor Log</button>
         <button class="nav-item"         data-section="employees">Employees</button>
         <button class="nav-item"         data-section="admins">Admin Users</button>
+        <button class="nav-item"         data-section="integrations">Integrations</button>
         <button class="nav-item"         data-section="appearance">Appearance</button>
       </nav>
       <div class="sidebar-footer">
@@ -150,6 +151,38 @@
               <tbody></tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- Integrations -->
+      <section id="sec-integrations" class="section">
+        <h2 class="section-title">Integrations</h2>
+
+        <div class="card">
+          <h3>n8n Webhook</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            When set, all check-in notifications are sent here. n8n handles Slack DMs, #security posts, and Google Calendar. Takes priority over the direct Slack webhook.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="n8nWebhookUrl">Webhook URL</label>
+            <input class="admin-input" id="n8nWebhookUrl" type="url" placeholder="https://n8n.anvil.ai/webhook/visitor-checkin" style="max-width:480px;" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Slack Direct Webhook</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Fallback used only when no n8n webhook is configured. Posts a single message to one channel.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="slackWebhookUrl">Incoming Webhook URL</label>
+            <input class="admin-input" id="slackWebhookUrl" type="url" placeholder="https://hooks.slack.com/services/..." style="max-width:480px;" />
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-white" onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline" onclick="testSlack()">Send Test Message</button>
+          </div>
+          <p id="integrationMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
         </div>
       </section>
 

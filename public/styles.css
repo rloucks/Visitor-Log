@@ -94,6 +94,26 @@ body {
   object-fit: contain;
 }
 
+.idle-clock {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.clock-time {
+  font-size: 4rem;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.clock-date {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
 .tap-pulse {
   width: 72px;
   height: 72px;

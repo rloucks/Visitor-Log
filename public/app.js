@@ -12,7 +12,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
   initCanvas();
   bindInactivity();
+  startClock();
 });
+
+// ============================================================
+// Clock
+// ============================================================
+function startClock() {
+  function tick() {
+    const now  = new Date();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const date = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    document.getElementById('idleTime').textContent = time;
+    document.getElementById('idleDate').textContent = date;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
 
 // ============================================================
 // Settings

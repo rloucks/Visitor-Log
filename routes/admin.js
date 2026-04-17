@@ -61,8 +61,11 @@ router.get('/me', (req, res) => {
 
 // --- Settings (semi-public — kiosk reads these for appearance) ---
 
+const PUBLIC_SETTINGS = ['companyName', 'backgroundStyle', 'logoPath'];
+
 router.get('/settings', (req, res) => {
-  const rows = db.prepare('SELECT key, value FROM settings').all();
+  const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
+    PUBLIC_SETTINGS.map(() => '?').join(',') + ')').all(...PUBLIC_SETTINGS);
   const settings = Object.fromEntries(rows.map(r => [r.key, r.value]));
   res.json(settings);
 });
@@ -74,6 +77,38 @@ router.post('/settings', requireAuth, (req, res) => {
     if (req.body[key] !== undefined) stmt.run(key, req.body[key]);
   }
   res.json({ success: true });
+});
+
+// --- Integrations (protected) ---
+
+router.get('/integrations', requireAuth, (req, res) => {
+  const keys = ['slackWebhookUrl', 'n8nWebhookUrl'];
+  const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
+    keys.map(() => '?').join(',') + ')').all(...keys);
+  const result = Object.fromEntries(rows.map(r => [r.key, r.value || '']));
+  res.json(result);
+});
+
+router.post('/integrations', requireAuth, (req, res) => {
+  const allowed = ['slackWebhookUrl', 'n8nWebhookUrl'];
+  const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) stmt.run(key, req.body[key] || '');
+  }
+  res.json({ success: true });
+});
+
+router.post('/integrations/test-slack', requireAuth, async (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'slackWebhookUrl'").get();
+  const url = row?.value || process.env.SLACK_WEBHOOK_URL;
+  if (!url) return res.status(400).json({ error: 'No Slack webhook URL configured.' });
+  try {
+    const axios = require('axios');
+    await axios.post(url, { text: ':white_check_mark: Test message from Visitor Check-In system.' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Slack returned an error: ${err.message}` });
+  }
 });
 
 router.post('/logo', requireAuth, upload.single('logo'), (req, res) => {

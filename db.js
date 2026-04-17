@@ -44,7 +44,9 @@ db.prepare(`
 const defaults = {
   companyName: 'Visitor Check-In',
   backgroundStyle: 'particles',
-  logoPath: ''
+  logoPath: '',
+  slackWebhookUrl: '',
+  n8nWebhookUrl: ''
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

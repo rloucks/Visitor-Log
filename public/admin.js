@@ -33,11 +33,12 @@ async function doLogout() {
 // Navigation
 // ============================================================
 const sectionLoaders = {
-  status:     () => {},          // manual trigger via button
-  visitors:   loadVisitors,
-  employees:  loadEmployees,
-  admins:     loadAdmins,
-  appearance: loadAppearanceSettings
+  status:       () => {},
+  visitors:     loadVisitors,
+  employees:    loadEmployees,
+  admins:       loadAdmins,
+  integrations: loadIntegrations,
+  appearance:   loadAppearanceSettings
 };
 
 function showSection(name) {
@@ -335,6 +336,59 @@ async function deleteAdmin(id) {
   } else {
     const d = await res.json();
     showToast(d.error, 'error');
+  }
+}
+
+// ============================================================
+// Integrations
+// ============================================================
+async function loadIntegrations() {
+  try {
+    const res  = await fetch('/api/admin/integrations');
+    const data = await res.json();
+    document.getElementById('n8nWebhookUrl').value   = data.n8nWebhookUrl   || '';
+    document.getElementById('slackWebhookUrl').value = data.slackWebhookUrl || '';
+  } catch {
+    showToast('Failed to load integration settings.', 'error');
+  }
+}
+
+async function saveIntegrations() {
+  const n8nWebhookUrl   = document.getElementById('n8nWebhookUrl').value.trim();
+  const slackWebhookUrl = document.getElementById('slackWebhookUrl').value.trim();
+  const msgEl = document.getElementById('integrationMsg');
+
+  const res = await fetch('/api/admin/integrations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ n8nWebhookUrl, slackWebhookUrl })
+  });
+
+  if (res.ok) {
+    showToast('Integration settings saved.');
+    msgEl.style.color = 'rgba(255,255,255,0.4)';
+    msgEl.textContent = '';
+  } else {
+    showToast('Failed to save.', 'error');
+  }
+}
+
+async function testSlack() {
+  const msgEl = document.getElementById('integrationMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+
+  // Save first so the test uses latest values
+  await saveIntegrations();
+
+  const res = await fetch('/api/admin/integrations/test-slack', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test message sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
   }
 }
 

@@ -41,28 +41,31 @@ router.post('/checkin', async (req, res) => {
 
   // Look up the host's Slack user ID from employees table
   const employee = db.prepare('SELECT slackUserId FROM employees WHERE LOWER(name) = LOWER(?)').get(host.trim());
-  const hostSlackId = employee?.slackUserId || null;
+  const hostSlackId = employee?.slackUserId || '';
 
   const payload = {
     firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    company: company?.trim() || '',
-    host: host.trim(),
-    hostSlackId: hostSlackId || ''
+    lastName:  lastName.trim(),
+    company:   company?.trim() || '',
+    host:      host.trim(),
+    hostSlackId
   };
 
-  // Prefer n8n webhook (handles Slack + Google Calendar)
-  if (process.env.N8N_WEBHOOK_URL) {
+  // Read webhook URLs from DB settings, fall back to env vars
+  const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+  const n8nUrl   = getSetting('n8nWebhookUrl')   || process.env.N8N_WEBHOOK_URL   || '';
+  const slackUrl = getSetting('slackWebhookUrl') || process.env.SLACK_WEBHOOK_URL || '';
+
+  if (n8nUrl) {
     try {
-      await axios.post(process.env.N8N_WEBHOOK_URL, payload);
+      await axios.post(n8nUrl, payload);
     } catch (err) {
       console.error('n8n webhook failed:', err.message);
     }
-  } else if (process.env.SLACK_WEBHOOK_URL) {
-    // Fallback: direct Slack webhook if n8n not configured
+  } else if (slackUrl) {
     try {
       const companyStr = payload.company ? ` from *${payload.company}*` : '';
-      await axios.post(process.env.SLACK_WEBHOOK_URL, {
+      await axios.post(slackUrl, {
         text: `:wave: *Visitor Check-In*\n*${payload.firstName} ${payload.lastName}*${companyStr} has arrived to see *${payload.host}*.`
       });
     } catch (err) {
