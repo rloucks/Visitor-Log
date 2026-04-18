@@ -106,7 +106,7 @@ async function initVanta(effect, color1, color2, bgColor, speed) {
   try {
     // Three.js is pre-loaded in <head>; only load the Vanta effect script dynamically
     if (!window.VANTA?.[key]) {
-      await loadScript(`https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.${key.toLowerCase()}.min.js`);
+      await loadScript(`/lib/vanta.${key.toLowerCase()}.min.js`);
     }
 
     if (window._vantaEffect) {
