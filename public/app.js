@@ -104,20 +104,19 @@ async function initVanta(effect, color1, color2, bgColor, speed) {
   if (!VANTA_PARAMS[key]) return;
 
   try {
-    // Three.js is pre-loaded in <head>; only load the Vanta effect script dynamically
     if (!window.VANTA?.[key]) {
       await loadScript(`https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.${key.toLowerCase()}.min.js`);
     }
 
-    if (window._vantaEffect) {
-      window._vantaEffect.destroy();
-      window._vantaEffect = null;
-    }
+    // Destroy previous instance safely
+    try { window._vantaEffect?.destroy(); } catch {}
+    window._vantaEffect = null;
 
     const spd    = parseFloat(speed) || 1.5;
     const params = VANTA_PARAMS[key](hexToInt(color1), hexToInt(color2), hexToInt(bgColor), spd);
 
     window._vantaEffect = window.VANTA[key]({
+      THREE,                       // pass THREE explicitly — Vanta doesn't always find window.THREE
       el:            container,
       mouseControls: false,
       touchControls: false,
