@@ -294,7 +294,7 @@
               <label class="setting-label" for="uiSurfaceColor">Card Background</label>
               <input type="color" class="admin-input" id="uiSurfaceColor" value="#111111"
                 style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveColor('--surface', this.value)" />
+                oninput="applyLiveSurface()" />
             </div>
             <div class="setting-row" style="margin:0;">
               <label class="setting-label" for="uiBgColor">Page Background</label>
@@ -302,6 +302,13 @@
                 style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
                 oninput="liveColor('--bg', this.value)" />
             </div>
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label" for="uiSurfaceOpacity">Card Transparency: <span id="surfaceOpacityLbl">100%</span></label>
+            <input type="range" class="admin-input" id="uiSurfaceOpacity" min="0" max="100" step="1" value="100"
+              style="max-width:240px;padding:6px 0;cursor:pointer;"
+              oninput="applyLiveSurface()" />
           </div>
 
           <div class="setting-row">

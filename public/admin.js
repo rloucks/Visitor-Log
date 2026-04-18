@@ -549,6 +549,22 @@ function liveColor(cssVar, value) {
   document.documentElement.style.setProperty(cssVar, value);
 }
 
+function hexToRgba(hex, opacity) {
+  const h = (hex || '#111111').replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+function applyLiveSurface() {
+  const hex     = document.getElementById('uiSurfaceColor').value;
+  const pct     = parseInt(document.getElementById('uiSurfaceOpacity').value, 10);
+  const opacity = pct / 100;
+  document.getElementById('surfaceOpacityLbl').textContent = `${pct}%`;
+  document.documentElement.style.setProperty('--surface', hexToRgba(hex, opacity));
+}
+
 function loadGoogleFont(fontName) {
   if (!fontName || fontName === 'Roboto') return;
   const id = `gfont-${fontName.replace(/\s+/g, '-')}`;
@@ -590,11 +606,17 @@ async function loadAppearanceSettings() {
     if (s.uiSurfaceColor) document.getElementById('uiSurfaceColor').value = s.uiSurfaceColor;
     if (s.uiBgColor)      document.getElementById('uiBgColor').value      = s.uiBgColor;
 
+    const opacity = s.uiSurfaceOpacity !== undefined ? parseInt(s.uiSurfaceOpacity, 10) : 100;
+    document.getElementById('uiSurfaceOpacity').value        = opacity;
+    document.getElementById('surfaceOpacityLbl').textContent = `${opacity}%`;
+
     // Apply saved colors to admin page itself
     if (s.uiAccentColor)  liveColor('--accent',  s.uiAccentColor);
     if (s.uiTextColor)    liveColor('--text',    s.uiTextColor);
-    if (s.uiSurfaceColor) liveColor('--surface', s.uiSurfaceColor);
     if (s.uiBgColor)      liveColor('--bg',      s.uiBgColor);
+    // Surface uses rgba to respect opacity
+    const surfaceHex = s.uiSurfaceColor || '#111111';
+    document.documentElement.style.setProperty('--surface', hexToRgba(surfaceHex, opacity / 100));
 
     // UI font
     const font = s.uiFont || 'Roboto';
@@ -625,11 +647,12 @@ async function saveSettings() {
   const clockTimezone  = document.getElementById('clockTimezone').value;
   const clockFormat    = document.querySelector('input[name="clockFormat"]:checked')?.value || '12';
   const clockPosition  = document.getElementById('clockPosition').value;
-  const uiAccentColor  = document.getElementById('uiAccentColor').value;
-  const uiTextColor    = document.getElementById('uiTextColor').value;
-  const uiSurfaceColor = document.getElementById('uiSurfaceColor').value;
-  const uiBgColor      = document.getElementById('uiBgColor').value;
-  const uiFont         = document.getElementById('uiFont').value;
+  const uiAccentColor    = document.getElementById('uiAccentColor').value;
+  const uiTextColor      = document.getElementById('uiTextColor').value;
+  const uiSurfaceColor   = document.getElementById('uiSurfaceColor').value;
+  const uiBgColor        = document.getElementById('uiBgColor').value;
+  const uiFont           = document.getElementById('uiFont').value;
+  const uiSurfaceOpacity = document.getElementById('uiSurfaceOpacity').value;
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -640,7 +663,7 @@ async function saveSettings() {
     body:    JSON.stringify({
       companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions),
       clockTimezone, clockFormat, clockPosition,
-      uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont
+      uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity
     })
   });
 

@@ -70,6 +70,7 @@ const defaults = {
   uiAccentColor:    '#ffffff',
   uiTextColor:      '#ffffff',
   uiSurfaceColor:   '#111111',
+  uiSurfaceOpacity: '100',
   uiBgColor:        '#000000',
   uiFont:           'Roboto',
 };

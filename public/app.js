@@ -146,12 +146,23 @@ async function loadSettings() {
 // ============================================================
 // UI Theme
 // ============================================================
+function hexToRgba(hex, opacity) {
+  const h = (hex || '#111111').replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
 function applyTheme(s) {
   const root = document.documentElement;
-  if (s.uiAccentColor)  root.style.setProperty('--accent',  s.uiAccentColor);
-  if (s.uiTextColor)    root.style.setProperty('--text',    s.uiTextColor);
-  if (s.uiSurfaceColor) root.style.setProperty('--surface', s.uiSurfaceColor);
-  if (s.uiBgColor)      root.style.setProperty('--bg',      s.uiBgColor);
+  if (s.uiAccentColor) root.style.setProperty('--accent', s.uiAccentColor);
+  if (s.uiTextColor)   root.style.setProperty('--text',   s.uiTextColor);
+  if (s.uiBgColor)     root.style.setProperty('--bg',     s.uiBgColor);
+
+  const surfaceHex = s.uiSurfaceColor || '#111111';
+  const opacity    = s.uiSurfaceOpacity !== undefined ? parseInt(s.uiSurfaceOpacity, 10) / 100 : 1;
+  root.style.setProperty('--surface', hexToRgba(surfaceHex, opacity));
 
   const font = s.uiFont || 'Roboto';
   if (font !== 'Roboto') {
