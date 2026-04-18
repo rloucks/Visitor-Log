@@ -121,6 +121,9 @@ async function loadSettings() {
       document.getElementById('logoContainer').appendChild(img);
     }
 
+    // UI theme
+    applyTheme(s);
+
     // Clock settings
     clockSettings.timezone = s.clockTimezone || 'America/New_York';
     clockSettings.format   = s.clockFormat   || '12';
@@ -138,6 +141,26 @@ async function loadSettings() {
   // Always start the clock — sync first for accuracy, fall back to local if API unreachable
   await syncTimeFromAPI(clockSettings.timezone);
   startClock();
+}
+
+// ============================================================
+// UI Theme
+// ============================================================
+function applyTheme(s) {
+  const root = document.documentElement;
+  if (s.uiAccentColor)  root.style.setProperty('--accent',  s.uiAccentColor);
+  if (s.uiTextColor)    root.style.setProperty('--text',    s.uiTextColor);
+  if (s.uiSurfaceColor) root.style.setProperty('--surface', s.uiSurfaceColor);
+  if (s.uiBgColor)      root.style.setProperty('--bg',      s.uiBgColor);
+
+  const font = s.uiFont || 'Roboto';
+  if (font !== 'Roboto') {
+    const link = document.createElement('link');
+    link.rel  = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@300;400;500&display=swap`;
+    document.head.appendChild(link);
+  }
+  root.style.setProperty('--font-family', `'${font}', sans-serif`);
 }
 
 // ============================================================

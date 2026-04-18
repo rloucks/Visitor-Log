@@ -67,6 +67,11 @@ const defaults = {
   clockTimezone:    'America/New_York',
   clockFormat:      '12',
   clockPosition:    'top-center',
+  uiAccentColor:    '#ffffff',
+  uiTextColor:      '#ffffff',
+  uiSurfaceColor:   '#111111',
+  uiBgColor:        '#000000',
+  uiFont:           'Roboto',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

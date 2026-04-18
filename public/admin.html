@@ -272,6 +272,86 @@
         </div>
 
         <div class="card">
+          <h3>Colors &amp; Font</h3>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+            Changes apply live as you pick. Save to persist across sessions.
+          </p>
+
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px;">
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="uiAccentColor">Accent &amp; Buttons</label>
+              <input type="color" class="admin-input" id="uiAccentColor" value="#ffffff"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveColor('--accent', this.value)" />
+            </div>
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="uiTextColor">Text Color</label>
+              <input type="color" class="admin-input" id="uiTextColor" value="#ffffff"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveColor('--text', this.value)" />
+            </div>
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="uiSurfaceColor">Card Background</label>
+              <input type="color" class="admin-input" id="uiSurfaceColor" value="#111111"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveColor('--surface', this.value)" />
+            </div>
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="uiBgColor">Page Background</label>
+              <input type="color" class="admin-input" id="uiBgColor" value="#000000"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveColor('--bg', this.value)" />
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label" for="uiFont">Font</label>
+            <select class="admin-input" id="uiFont" onchange="liveFont(this.value)" style="max-width:280px;">
+              <optgroup label="Clean / Modern">
+                <option value="Roboto">Roboto</option>
+                <option value="Inter">Inter</option>
+                <option value="Poppins">Poppins</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Nunito Sans">Nunito Sans</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Lato">Lato</option>
+                <option value="DM Sans">DM Sans</option>
+                <option value="Outfit">Outfit</option>
+                <option value="Figtree">Figtree</option>
+                <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+              </optgroup>
+              <optgroup label="Bold / Display">
+                <option value="Oswald">Oswald</option>
+                <option value="Barlow Condensed">Barlow Condensed</option>
+                <option value="Rajdhani">Rajdhani</option>
+                <option value="Bebas Neue">Bebas Neue</option>
+                <option value="Exo 2">Exo 2</option>
+              </optgroup>
+              <optgroup label="Tech / Futuristic">
+                <option value="Orbitron">Orbitron</option>
+                <option value="Share Tech">Share Tech</option>
+                <option value="Russo One">Russo One</option>
+                <option value="Oxanium">Oxanium</option>
+              </optgroup>
+              <optgroup label="Elegant">
+                <option value="Playfair Display">Playfair Display</option>
+                <option value="Cormorant Garamond">Cormorant Garamond</option>
+                <option value="Lora">Lora</option>
+              </optgroup>
+              <optgroup label="Monospace">
+                <option value="Space Mono">Space Mono</option>
+                <option value="JetBrains Mono">JetBrains Mono</option>
+                <option value="IBM Plex Mono">IBM Plex Mono</option>
+              </optgroup>
+            </select>
+          </div>
+          <div id="fontPreview" style="margin-top:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:1.3rem;color:rgba(255,255,255,0.65);letter-spacing:0.02em;">
+            The quick brown fox jumps over the lazy dog — 0123456789
+          </div>
+          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:18px;">Save</button>
+        </div>
+
+        <div class="card">
           <h3>Background Effect</h3>
           <div class="setting-row">
             <label class="setting-label" for="settingVantaEffect">Effect</label>

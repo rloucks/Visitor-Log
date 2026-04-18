@@ -542,6 +542,34 @@ function collectEffectValues(effect) {
   return opts;
 }
 
+// ============================================================
+// Appearance — UI Colors & Font live preview
+// ============================================================
+function liveColor(cssVar, value) {
+  document.documentElement.style.setProperty(cssVar, value);
+}
+
+function loadGoogleFont(fontName) {
+  if (!fontName || fontName === 'Roboto') return;
+  const id = `gfont-${fontName.replace(/\s+/g, '-')}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id   = id;
+  link.rel  = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@300;400;500&display=swap`;
+  document.head.appendChild(link);
+}
+
+function liveFont(fontName) {
+  loadGoogleFont(fontName);
+  document.documentElement.style.setProperty('--font-family', `'${fontName}', sans-serif`);
+  const preview = document.getElementById('fontPreview');
+  if (preview) {
+    preview.style.fontFamily = `'${fontName}', sans-serif`;
+    preview.textContent = `${fontName} — The quick brown fox jumps over the lazy dog.`;
+  }
+}
+
 async function loadAppearanceSettings() {
   try {
     const res = await fetch('/api/admin/settings');
@@ -555,6 +583,23 @@ async function loadAppearanceSettings() {
     const fmtEl = document.getElementById(`clockFormat${fmt}`);
     if (fmtEl) fmtEl.checked = true;
     document.getElementById('clockPosition').value = s.clockPosition || 'top-center';
+
+    // UI colors
+    if (s.uiAccentColor)  document.getElementById('uiAccentColor').value  = s.uiAccentColor;
+    if (s.uiTextColor)    document.getElementById('uiTextColor').value    = s.uiTextColor;
+    if (s.uiSurfaceColor) document.getElementById('uiSurfaceColor').value = s.uiSurfaceColor;
+    if (s.uiBgColor)      document.getElementById('uiBgColor').value      = s.uiBgColor;
+
+    // Apply saved colors to admin page itself
+    if (s.uiAccentColor)  liveColor('--accent',  s.uiAccentColor);
+    if (s.uiTextColor)    liveColor('--text',    s.uiTextColor);
+    if (s.uiSurfaceColor) liveColor('--surface', s.uiSurfaceColor);
+    if (s.uiBgColor)      liveColor('--bg',      s.uiBgColor);
+
+    // UI font
+    const font = s.uiFont || 'Roboto';
+    document.getElementById('uiFont').value = font;
+    liveFont(font);
 
     // Vanta settings
     const effect = s.vantaEffect || 'NET';
@@ -580,6 +625,11 @@ async function saveSettings() {
   const clockTimezone  = document.getElementById('clockTimezone').value;
   const clockFormat    = document.querySelector('input[name="clockFormat"]:checked')?.value || '12';
   const clockPosition  = document.getElementById('clockPosition').value;
+  const uiAccentColor  = document.getElementById('uiAccentColor').value;
+  const uiTextColor    = document.getElementById('uiTextColor').value;
+  const uiSurfaceColor = document.getElementById('uiSurfaceColor').value;
+  const uiBgColor      = document.getElementById('uiBgColor').value;
+  const uiFont         = document.getElementById('uiFont').value;
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -589,7 +639,8 @@ async function saveSettings() {
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({
       companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions),
-      clockTimezone, clockFormat, clockPosition
+      clockTimezone, clockFormat, clockPosition,
+      uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont
     })
   });
 
