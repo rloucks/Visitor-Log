@@ -18,9 +18,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadsDir));
 
-// Serve Three.js and Vanta.js from node_modules (no CDN dependency)
-app.use('/lib', express.static(path.join(__dirname, 'node_modules', 'three', 'build')));
-app.use('/lib', express.static(path.join(__dirname, 'node_modules', 'vanta', 'dist')));
+// Serve Three.js and Vanta.js from lib/vantajs (committed to git, no CDN needed)
+app.use('/lib', express.static(path.join(__dirname, 'lib', 'vantajs')));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'change-this-secret-in-production',
