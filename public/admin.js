@@ -113,17 +113,19 @@ function renderVisitors() {
   tbody.innerHTML = '';
 
   if (!visitorData.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:32px;">No visitors found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.3);padding:32px;">No visitors found.</td></tr>';
     return;
   }
 
   visitorData.forEach(v => {
+    const stay = formatStay(v.stayHours, v.stayMinutes);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${esc(v.firstName)} ${esc(v.lastName)}</td>
       <td>${esc(v.company || '—')}</td>
       <td>${esc(v.host)}</td>
       <td>${new Date(v.checkIn).toLocaleString()}</td>
+      <td>${esc(stay)}</td>
       <td><button class="btn btn-danger btn-sm" onclick="deleteVisitor(${v.id})">Delete</button></td>
     `;
     tbody.appendChild(tr);
@@ -147,10 +149,11 @@ async function deleteVisitor(id) {
 function exportCSV() {
   if (!visitorData.length) { showToast('No data to export.', 'error'); return; }
 
-  const headers = ['First Name', 'Last Name', 'Company', 'Host', 'Check-In Time'];
+  const headers = ['First Name', 'Last Name', 'Company', 'Host', 'Check-In Time', 'Expected Stay'];
   const rows = visitorData.map(v => [
     v.firstName, v.lastName, v.company || '', v.host,
-    new Date(v.checkIn).toLocaleString()
+    new Date(v.checkIn).toLocaleString(),
+    formatStay(v.stayHours, v.stayMinutes)
   ]);
 
   const csv = [headers, ...rows]
@@ -460,6 +463,15 @@ async function uploadLogo() {
 // ============================================================
 // Utilities
 // ============================================================
+function formatStay(hours, minutes) {
+  const h = parseInt(hours,   10) || 0;
+  const m = parseInt(minutes, 10) || 0;
+  if (h === 0 && m === 0) return '—';
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
 function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
