@@ -133,6 +133,62 @@ function renderVisitors() {
   });
 }
 
+async function clearVisitorLog() {
+  const confirmed = confirm(
+    'DELETE ALL VISITOR RECORDS?\n\n' +
+    'This will permanently erase every entry in the log and cannot be undone.\n\n' +
+    'Click OK only if you have already exported a backup.'
+  );
+  if (!confirmed) return;
+
+  // Second confirmation — make them type to proceed
+  const check = prompt('Type DELETE to confirm:');
+  if (check?.trim().toUpperCase() !== 'DELETE') {
+    showToast('Cancelled — nothing was deleted.', 'error');
+    return;
+  }
+
+  const res = await fetch('/api/admin/visitors', { method: 'DELETE' });
+  if (res.ok) {
+    visitorData = [];
+    renderVisitors();
+    showToast('All visitor records deleted.');
+  } else {
+    showToast('Failed to clear log.', 'error');
+  }
+}
+
+function exportAllCSV() {
+  // Export uses current in-memory data if loaded, otherwise fetches all
+  if (visitorData.length) {
+    exportCSV();
+    return;
+  }
+  // Fetch without filters then export
+  fetch('/api/admin/visitors')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.length) { showToast('No records to export.', 'error'); return; }
+      const headers = ['First Name', 'Last Name', 'Company', 'Host', 'Check-In Time', 'Expected Stay'];
+      const rows = data.map(v => [
+        v.firstName, v.lastName, v.company || '', v.host,
+        new Date(v.checkIn).toLocaleString(),
+        formatStay(v.stayHours, v.stayMinutes)
+      ]);
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `visitors-full-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => showToast('Failed to fetch records.', 'error'));
+}
+
 function clearVisitorFilters() {
   document.getElementById('visitorSearch').value = '';
   document.getElementById('dateFrom').value = '';
@@ -577,6 +633,45 @@ function loadGoogleFont(fontName) {
   document.head.appendChild(link);
 }
 
+function liveSpecialMessage() {
+  const enabled  = document.getElementById('specialMessageEnabled').checked;
+  const text     = document.getElementById('specialMessage').value.trim();
+  const color    = document.getElementById('specialMessageColor').value;
+  const bold     = document.getElementById('specialMessageBoldCheck').checked;
+  const size     = document.getElementById('specialMessageSize').value;
+  const position = document.getElementById('specialMessagePosition').value;
+  const align    = document.querySelector('input[name="specialMessageAlign"]:checked')?.value || 'center';
+
+  document.getElementById('specialMessageSizeLbl').textContent = parseFloat(size).toFixed(1);
+
+  // Live-preview on the admin page itself (bottom of viewport)
+  let preview = document.getElementById('adminMsgPreview');
+  if (!preview) {
+    preview = document.createElement('div');
+    preview.id = 'adminMsgPreview';
+    preview.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;padding:10px 32px;background:rgba(255,255,255,0.07);backdrop-filter:blur(16px);border-color:rgba(255,255,255,0.12);border-style:solid;pointer-events:none;';
+    document.body.appendChild(preview);
+  }
+
+  if (enabled && text) {
+    preview.textContent   = text;
+    preview.style.color      = color;
+    preview.style.fontSize   = `${size}rem`;
+    preview.style.fontWeight = bold ? '700' : '400';
+    preview.style.textAlign  = align;
+    if (position === 'top') {
+      preview.style.top = '0'; preview.style.bottom = '';
+      preview.style.borderTopWidth = '0'; preview.style.borderBottomWidth = '1px';
+    } else {
+      preview.style.bottom = '0'; preview.style.top = '';
+      preview.style.borderBottomWidth = '0'; preview.style.borderTopWidth = '1px';
+    }
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 function liveFontWeight(which, value) {
   const cssVar = which === 'title' ? '--font-weight-title' : '--font-weight-body';
   document.getElementById(`fontWeight${which === 'title' ? 'Title' : 'Body'}Lbl`).textContent = value;
@@ -601,8 +696,18 @@ async function loadAppearanceSettings() {
     document.getElementById('settingCompanyName').value = s.companyName || '';
 
     // Special message
-    document.getElementById('specialMessageEnabled').checked = s.specialMessageEnabled === '1';
-    document.getElementById('specialMessage').value          = s.specialMessage || '';
+    document.getElementById('specialMessageEnabled').checked  = s.specialMessageEnabled === '1';
+    document.getElementById('specialMessage').value           = s.specialMessage || '';
+    document.getElementById('specialMessageColor').value      = s.specialMessageColor    || '#ffffff';
+    document.getElementById('specialMessageBoldCheck').checked = s.specialMessageBold === '1';
+    const msgSize = s.specialMessageSize || '1';
+    document.getElementById('specialMessageSize').value       = msgSize;
+    document.getElementById('specialMessageSizeLbl').textContent = parseFloat(msgSize).toFixed(1);
+    document.getElementById('specialMessagePosition').value   = s.specialMessagePosition || 'bottom';
+    const msgAlign = s.specialMessageAlign || 'center';
+    const alignEl  = document.querySelector(`input[name="specialMessageAlign"][value="${msgAlign}"]`);
+    if (alignEl) alignEl.checked = true;
+    liveSpecialMessage();
 
     // Clock settings
     document.getElementById('clockTimezone').value = s.clockTimezone || 'America/New_York';
@@ -676,8 +781,13 @@ async function saveSettings() {
   const uiSurfaceOpacity = document.getElementById('uiSurfaceOpacity').value;
   const fontWeightTitle      = document.getElementById('fontWeightTitle').value;
   const fontWeightBody       = document.getElementById('fontWeightBody').value;
-  const specialMessageEnabled = document.getElementById('specialMessageEnabled').checked ? '1' : '0';
-  const specialMessage        = document.getElementById('specialMessage').value;
+  const specialMessageEnabled  = document.getElementById('specialMessageEnabled').checked ? '1' : '0';
+  const specialMessage         = document.getElementById('specialMessage').value;
+  const specialMessageColor    = document.getElementById('specialMessageColor').value;
+  const specialMessageBold     = document.getElementById('specialMessageBoldCheck').checked ? '1' : '0';
+  const specialMessageSize     = document.getElementById('specialMessageSize').value;
+  const specialMessagePosition = document.getElementById('specialMessagePosition').value;
+  const specialMessageAlign    = document.querySelector('input[name="specialMessageAlign"]:checked')?.value || 'center';
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -690,7 +800,8 @@ async function saveSettings() {
       clockTimezone, clockFormat, clockPosition,
       uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity,
       fontWeightTitle, fontWeightBody,
-      specialMessageEnabled, specialMessage
+      specialMessageEnabled, specialMessage, specialMessageColor, specialMessageBold,
+      specialMessageSize, specialMessagePosition, specialMessageAlign
     })
   });
 

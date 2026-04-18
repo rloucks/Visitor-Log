@@ -86,6 +86,23 @@
             </table>
           </div>
         </div>
+
+        <div class="card-danger">
+          <h3>⚠ Danger Zone — Clear Log</h3>
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:18px;line-height:1.6;">
+            Permanently deletes <strong>every visitor record</strong> in the database. This cannot be undone.
+            Export a copy first if you need to keep the data.
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-white" onclick="exportAllCSV()">
+              Download Full Export
+            </button>
+            <button class="btn btn-danger" style="border:1px solid rgba(224,85,85,0.5);opacity:1;"
+              onclick="clearVisitorLog()">
+              Clear All Records
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- Employees -->
@@ -218,8 +235,62 @@
             <label class="setting-label" for="specialMessage">Message</label>
             <textarea id="specialMessage" class="admin-input"
               placeholder="e.g. Welcome! Please see the front desk after checking in."
-              style="max-width:440px;min-height:72px;resize:vertical;line-height:1.5;"></textarea>
+              style="max-width:440px;min-height:72px;resize:vertical;line-height:1.5;"
+              oninput="liveSpecialMessage()"></textarea>
           </div>
+
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:4px;">
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="specialMessageColor">Color</label>
+              <input type="color" class="admin-input" id="specialMessageColor" value="#ffffff"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveSpecialMessage()" />
+            </div>
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="specialMessageBoldCheck">Bold</label>
+              <input type="checkbox" id="specialMessageBoldCheck"
+                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"
+                onchange="liveSpecialMessage()" />
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label" for="specialMessageSize">
+              Font Size: <span id="specialMessageSizeLbl">1.0</span>rem
+            </label>
+            <input type="range" class="admin-input" id="specialMessageSize"
+              min="0.7" max="2.2" step="0.1" value="1.0"
+              style="max-width:240px;padding:6px 0;cursor:pointer;"
+              oninput="liveSpecialMessage()" />
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label" for="specialMessagePosition">Position</label>
+            <select class="admin-input" id="specialMessagePosition" style="max-width:200px;"
+              onchange="liveSpecialMessage()">
+              <option value="bottom">Bottom of screen</option>
+              <option value="top">Top of screen</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label class="setting-label">Alignment</label>
+            <div style="display:flex;gap:16px;">
+              <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                <input type="radio" name="specialMessageAlign" value="left"
+                  onchange="liveSpecialMessage()"> Left
+              </label>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                <input type="radio" name="specialMessageAlign" value="center" checked
+                  onchange="liveSpecialMessage()"> Center
+              </label>
+              <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                <input type="radio" name="specialMessageAlign" value="right"
+                  onchange="liveSpecialMessage()"> Right
+              </label>
+            </div>
+          </div>
+
           <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
         </div>
 

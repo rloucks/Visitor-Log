@@ -116,7 +116,15 @@ async function loadSettings() {
     // Special message banner
     const msgEl = document.getElementById('kioskMessage');
     if (s.specialMessageEnabled === '1' && s.specialMessage?.trim()) {
-      msgEl.textContent = s.specialMessage.trim();
+      msgEl.textContent        = s.specialMessage.trim();
+      msgEl.style.color        = s.specialMessageColor    || '#ffffff';
+      msgEl.style.fontSize     = `${s.specialMessageSize  || '1'}rem`;
+      msgEl.style.fontWeight   = s.specialMessageBold === '1' ? '700' : '400';
+      msgEl.style.textAlign    = s.specialMessageAlign    || 'center';
+
+      const pos = s.specialMessagePosition || 'bottom';
+      msgEl.classList.remove('msg-top', 'msg-bottom');
+      msgEl.classList.add(`msg-${pos}`);
       msgEl.classList.remove('hidden');
     } else {
       msgEl.classList.add('hidden');

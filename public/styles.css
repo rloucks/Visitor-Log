@@ -455,22 +455,32 @@ body {
    ============================================================ */
 .kiosk-message {
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  z-index: 3;
   padding: 14px 32px;
   background: rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  text-align: center;
-  font-size: 1rem;
-  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.12);
+  border-style: solid;
+  border-width: 0;
+  font-size: 1rem;          /* overridden by specialMessageSize setting */
+  color: var(--text);       /* overridden by specialMessageColor setting */
   letter-spacing: 0.02em;
   line-height: 1.5;
   pointer-events: none;
   user-select: none;
+}
+
+.kiosk-message.msg-bottom {
+  bottom: 0;
+  border-top-width: 1px;
+}
+
+.kiosk-message.msg-top {
+  top: 100px;   /* clears the clock area */
+  border-bottom-width: 1px;
 }
 
 /* ============================================================
@@ -695,6 +705,23 @@ body.admin-body {
   border-radius: var(--radius);
   padding: 24px;
   margin-bottom: 20px;
+}
+
+.card-danger {
+  background: rgba(224, 85, 85, 0.06);
+  border: 1px solid rgba(224, 85, 85, 0.4);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.card-danger h3 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--danger);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
 }
 
 .card h3 {

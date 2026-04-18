@@ -88,8 +88,13 @@ const defaults = {
   eventName:        'Event',
   eventStart:       '',
   eventEnd:         '',
-  specialMessageEnabled: '0',
-  specialMessage:        '',
+  specialMessageEnabled:  '0',
+  specialMessage:         '',
+  specialMessageSize:     '1',
+  specialMessageColor:    '#ffffff',
+  specialMessagePosition: 'bottom',
+  specialMessageAlign:    'center',
+  specialMessageBold:     '0',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);
