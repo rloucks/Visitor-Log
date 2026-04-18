@@ -38,7 +38,8 @@ const sectionLoaders = {
   employees:    loadEmployees,
   admins:       loadAdmins,
   integrations: loadIntegrations,
-  appearance:   loadAppearanceSettings
+  appearance:   loadAppearanceSettings,
+  events:       loadEvents
 };
 
 function showSection(name) {
@@ -576,6 +577,12 @@ function loadGoogleFont(fontName) {
   document.head.appendChild(link);
 }
 
+function liveFontWeight(which, value) {
+  const cssVar = which === 'title' ? '--font-weight-title' : '--font-weight-body';
+  document.getElementById(`fontWeight${which === 'title' ? 'Title' : 'Body'}Lbl`).textContent = value;
+  document.documentElement.style.setProperty(cssVar, value);
+}
+
 function liveFont(fontName) {
   loadGoogleFont(fontName);
   document.documentElement.style.setProperty('--font-family', `'${fontName}', sans-serif`);
@@ -623,6 +630,16 @@ async function loadAppearanceSettings() {
     document.getElementById('uiFont').value = font;
     liveFont(font);
 
+    // Font weights
+    const fwTitle = s.fontWeightTitle || '300';
+    const fwBody  = s.fontWeightBody  || '400';
+    document.getElementById('fontWeightTitle').value    = fwTitle;
+    document.getElementById('fontWeightTitleLbl').textContent = fwTitle;
+    document.getElementById('fontWeightBody').value     = fwBody;
+    document.getElementById('fontWeightBodyLbl').textContent  = fwBody;
+    liveFontWeight('title', fwTitle);
+    liveFontWeight('body',  fwBody);
+
     // Vanta settings
     const effect = s.vantaEffect || 'NET';
     document.getElementById('settingVantaEffect').value = effect;
@@ -653,6 +670,8 @@ async function saveSettings() {
   const uiBgColor        = document.getElementById('uiBgColor').value;
   const uiFont           = document.getElementById('uiFont').value;
   const uiSurfaceOpacity = document.getElementById('uiSurfaceOpacity').value;
+  const fontWeightTitle  = document.getElementById('fontWeightTitle').value;
+  const fontWeightBody   = document.getElementById('fontWeightBody').value;
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -663,7 +682,8 @@ async function saveSettings() {
     body:    JSON.stringify({
       companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions),
       clockTimezone, clockFormat, clockPosition,
-      uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity
+      uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity,
+      fontWeightTitle, fontWeightBody
     })
   });
 
@@ -709,6 +729,140 @@ function esc(str) {
     .replace(/"/g, '&quot;');
 }
 
+// ============================================================
+// Events
+// ============================================================
+async function loadEvents() {
+  try {
+    const res = await fetch('/api/admin/settings');
+    const s   = await res.json();
+    document.getElementById('eventModeEnabled').checked = s.eventMode === '1';
+    document.getElementById('eventName').value          = s.eventName || '';
+  } catch {
+    showToast('Failed to load event settings.', 'error');
+  }
+  loadEventVisitors();
+}
+
+async function saveEventSettings() {
+  const eventMode = document.getElementById('eventModeEnabled').checked ? '1' : '0';
+  const eventName = document.getElementById('eventName').value.trim();
+  const res = await fetch('/api/admin/settings', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ eventMode, eventName })
+  });
+  if (res.ok) showToast('Event settings saved.');
+  else        showToast('Failed to save.', 'error');
+}
+
+async function loadEventVisitors() {
+  try {
+    const res      = await fetch('/api/admin/event-visitors');
+    const visitors = await res.json();
+    const tbody    = document.querySelector('#eventVisitorTable tbody');
+    tbody.innerHTML = '';
+
+    if (!visitors.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:rgba(255,255,255,0.3);padding:32px;">No approved visitors yet. Add some above.</td></tr>';
+      return;
+    }
+
+    visitors.forEach(v => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(v.firstName)} ${esc(v.lastName)}</td>
+        <td>${esc(v.company || '—')}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteEventVisitor(${v.id})">Remove</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch {
+    showToast('Failed to load event visitors.', 'error');
+  }
+}
+
+async function addEventVisitor() {
+  const firstName = document.getElementById('evFirstName').value.trim();
+  const lastName  = document.getElementById('evLastName').value.trim();
+  const company   = document.getElementById('evCompany').value.trim();
+
+  if (!firstName || !lastName) { showToast('First and last name are required.', 'error'); return; }
+
+  const res = await fetch('/api/admin/event-visitors', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ firstName, lastName, company })
+  });
+
+  if (res.ok) {
+    ['evFirstName', 'evLastName', 'evCompany'].forEach(id => document.getElementById(id).value = '');
+    loadEventVisitors();
+    showToast('Visitor added.');
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Failed to add visitor.', 'error');
+  }
+}
+
+async function deleteEventVisitor(id) {
+  if (!confirm('Remove this visitor from the approved list?')) return;
+  const res = await fetch(`/api/admin/event-visitors/${id}`, { method: 'DELETE' });
+  if (res.ok) { loadEventVisitors(); showToast('Visitor removed.'); }
+}
+
+async function clearEventVisitors() {
+  if (!confirm('Remove ALL approved visitors from the list? This cannot be undone.')) return;
+  const res = await fetch('/api/admin/event-visitors', { method: 'DELETE' });
+  if (res.ok) { loadEventVisitors(); showToast('Visitor list cleared.'); }
+  else        showToast('Failed to clear list.', 'error');
+}
+
+async function importEventVisitorCSV() {
+  const file     = document.getElementById('eventCsvFile').files[0];
+  const resultEl = document.getElementById('eventCsvResult');
+  if (!file) { showToast('Please select a CSV file.', 'error'); return; }
+
+  const text  = await file.text();
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) { showToast('CSV has no data rows.', 'error'); return; }
+
+  const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ''));
+  const col    = (...names) => names.reduce((found, n) => found !== -1 ? found : header.indexOf(n), -1);
+  const firstIdx   = col('firstname', 'first');
+  const lastIdx    = col('lastname',  'last');
+  const companyIdx = col('company');
+
+  if (firstIdx === -1 || lastIdx === -1) {
+    showToast('CSV must have "firstName" and "lastName" columns.', 'error'); return;
+  }
+
+  let added = 0, skipped = 0;
+  resultEl.textContent = 'Importing…';
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols      = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const firstName = cols[firstIdx];
+    const lastName  = cols[lastIdx];
+    if (!firstName || !lastName) { skipped++; continue; }
+
+    const res = await fetch('/api/admin/event-visitors', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ firstName, lastName, company: companyIdx !== -1 ? cols[companyIdx] || '' : '' })
+    });
+    if (res.ok) added++; else skipped++;
+  }
+
+  document.getElementById('eventCsvFile').value = '';
+  resultEl.textContent = `Done — ${added} added, ${skipped} skipped.`;
+  loadEventVisitors();
+  showToast(`Imported ${added} visitor${added !== 1 ? 's' : ''}.`);
+}
+
+// ============================================================
+// Utilities
+// ============================================================
 let toastTimer;
 function showToast(msg, type = 'success') {
   let toast = document.getElementById('toast');

@@ -79,4 +79,78 @@ router.post('/checkin', async (req, res) => {
   res.json({ success: true });
 });
 
+// Event mode — visitor list with live check-in status
+router.get('/event', (req, res) => {
+  const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+  if (getSetting('eventMode') !== '1') return res.json({ eventMode: false });
+
+  const eventName = getSetting('eventName') || 'Event';
+  const visitors  = db.prepare('SELECT * FROM event_visitors ORDER BY lastName ASC, firstName ASC').all();
+  const today     = new Date().toISOString().slice(0, 10);
+
+  const activeCheckins = db.prepare(`
+    SELECT id, firstName, lastName FROM visitors
+    WHERE host = ? AND date(checkIn) = ? AND checkOut IS NULL
+  `).all(eventName, today);
+
+  const checkinMap = {};
+  for (const ci of activeCheckins) {
+    checkinMap[`${ci.firstName.toLowerCase()}|${ci.lastName.toLowerCase()}`] = ci.id;
+  }
+
+  const result = visitors.map(v => {
+    const key = `${v.firstName.toLowerCase()}|${v.lastName.toLowerCase()}`;
+    return { ...v, checkedIn: key in checkinMap, visitorRecordId: checkinMap[key] || null };
+  });
+
+  res.json({ eventMode: true, eventName, visitors: result });
+});
+
+// Event check-in
+router.post('/event-checkin', (req, res) => {
+  const { eventVisitorId } = req.body;
+  if (!eventVisitorId) return res.status(400).json({ error: 'eventVisitorId required.' });
+
+  const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+  const eventName  = getSetting('eventName') || 'Event';
+  const ev         = db.prepare('SELECT * FROM event_visitors WHERE id = ?').get(eventVisitorId);
+  if (!ev) return res.status(404).json({ error: 'Visitor not found.' });
+
+  const today    = new Date().toISOString().slice(0, 10);
+  const existing = db.prepare(`
+    SELECT id FROM visitors
+    WHERE firstName = ? AND lastName = ? AND host = ? AND date(checkIn) = ? AND checkOut IS NULL
+  `).get(ev.firstName, ev.lastName, eventName, today);
+
+  if (existing) return res.status(409).json({ error: 'Already checked in.' });
+
+  const result = db.prepare(`
+    INSERT INTO visitors (firstName, lastName, company, host, stayHours, stayMinutes)
+    VALUES (?, ?, ?, ?, 0, 0)
+  `).run(ev.firstName, ev.lastName, ev.company || null, eventName);
+
+  res.json({ success: true, visitorRecordId: result.lastInsertRowid });
+});
+
+// Event check-out
+router.post('/event-checkout', (req, res) => {
+  const { visitorRecordId } = req.body;
+  if (!visitorRecordId) return res.status(400).json({ error: 'visitorRecordId required.' });
+
+  const record = db.prepare('SELECT * FROM visitors WHERE id = ? AND checkOut IS NULL').get(visitorRecordId);
+  if (!record) return res.status(404).json({ error: 'Active check-in not found.' });
+
+  const now          = new Date();
+  const checkOutISO  = now.toISOString().replace('T', ' ').slice(0, 19);
+  const diffMs       = now.getTime() - new Date(record.checkIn).getTime();
+  const totalMinutes = Math.round(diffMs / 60000);
+  const stayHours    = Math.floor(totalMinutes / 60);
+  const stayMinutes  = totalMinutes % 60;
+
+  db.prepare('UPDATE visitors SET checkOut = ?, stayHours = ?, stayMinutes = ? WHERE id = ?')
+    .run(checkOutISO, stayHours, stayMinutes, visitorRecordId);
+
+  res.json({ success: true, stayHours, stayMinutes });
+});
+
 module.exports = router;

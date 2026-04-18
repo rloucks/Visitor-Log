@@ -109,6 +109,34 @@
     </div>
   </div>
 
+  <!-- Event Step 1: Select visitor -->
+  <div id="event-step1" class="screen">
+    <div class="form-card event-card">
+      <div class="step-header">
+        <button class="btn-back" onclick="goIdle()">← Back</button>
+      </div>
+      <h2 id="eventTitle">Event Check-In</h2>
+      <p style="text-align:center;color:rgba(255,255,255,0.45);margin:-16px 0 16px;font-size:0.88rem;">
+        Find your name and tap to check in or out
+      </p>
+      <input id="eventSearch" type="text" placeholder="Search name…" autocomplete="off"
+        class="event-search" oninput="filterEventVisitors()" />
+      <div id="eventVisitorList" class="event-visitor-list"></div>
+    </div>
+  </div>
+
+  <!-- Event Step 2: Confirm check-in / check-out -->
+  <div id="event-step2" class="screen">
+    <div class="form-card success-card" style="position:relative;">
+      <button class="btn-back" onclick="showScreen('event-step1')"
+        style="position:absolute;top:24px;left:24px;">← Back</button>
+      <h2 id="eventActionTitle">Check In</h2>
+      <p id="eventVisitorName" style="font-size:1.4rem;margin:12px 0 6px;"></p>
+      <p id="eventActionDetail" style="font-size:0.88rem;color:rgba(255,255,255,0.4);margin-bottom:28px;"></p>
+      <button class="btn-primary" id="eventActionBtn" onclick="submitEventAction()">Confirm</button>
+    </div>
+  </div>
+
   <!-- Step 3: Success -->
   <div id="step3" class="screen">
     <div class="form-card success-card">

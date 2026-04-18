@@ -61,7 +61,7 @@ router.get('/me', (req, res) => {
 
 // --- Settings (semi-public — kiosk reads these for appearance) ---
 
-const PUBLIC_SETTINGS = ['companyName', 'logoPath', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont'];
+const PUBLIC_SETTINGS = ['companyName', 'logoPath', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName'];
 
 router.get('/settings', (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
@@ -71,7 +71,7 @@ router.get('/settings', (req, res) => {
 });
 
 router.post('/settings', requireAuth, (req, res) => {
-  const allowed = ['companyName', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont'];
+  const allowed = ['companyName', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName'];
   const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
   for (const key of allowed) {
     if (req.body[key] !== undefined) stmt.run(key, req.body[key]);
@@ -222,6 +222,33 @@ router.delete('/admins/:id', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'You cannot delete your own account.' });
   }
   db.prepare('DELETE FROM admins WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// --- Event Visitors ---
+
+router.get('/event-visitors', requireAuth, (req, res) => {
+  res.json(db.prepare('SELECT * FROM event_visitors ORDER BY lastName ASC, firstName ASC').all());
+});
+
+router.post('/event-visitors', requireAuth, (req, res) => {
+  const { firstName, lastName, company } = req.body;
+  if (!firstName?.trim() || !lastName?.trim()) {
+    return res.status(400).json({ error: 'First and last name are required.' });
+  }
+  const result = db.prepare(
+    'INSERT INTO event_visitors (firstName, lastName, company) VALUES (?, ?, ?)'
+  ).run(firstName.trim(), lastName.trim(), company?.trim() || null);
+  res.json({ success: true, id: result.lastInsertRowid });
+});
+
+router.delete('/event-visitors/:id', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM event_visitors WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+router.delete('/event-visitors', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM event_visitors').run();
   res.json({ success: true });
 });
 

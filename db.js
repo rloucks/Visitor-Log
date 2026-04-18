@@ -40,6 +40,15 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS event_visitors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    company TEXT
+  )
+`).run();
+
 // Default per-effect Vanta options (stored as JSON string)
 const defaultVantaOptions = JSON.stringify({
   NET:    { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },
@@ -73,6 +82,10 @@ const defaults = {
   uiSurfaceOpacity: '100',
   uiBgColor:        '#000000',
   uiFont:           'Roboto',
+  fontWeightTitle:  '300',
+  fontWeightBody:   '400',
+  eventMode:        '0',
+  eventName:        'Event',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);
@@ -91,5 +104,6 @@ if (adminCount.count === 0) {
 // Migrations — safe to run on every start
 try { db.prepare('ALTER TABLE visitors ADD COLUMN stayHours INTEGER NOT NULL DEFAULT 0').run(); } catch {}
 try { db.prepare('ALTER TABLE visitors ADD COLUMN stayMinutes INTEGER NOT NULL DEFAULT 0').run(); } catch {}
+try { db.prepare('ALTER TABLE visitors ADD COLUMN checkOut DATETIME').run(); } catch {}
 
 module.exports = db;

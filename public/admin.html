@@ -26,6 +26,7 @@
         <button class="nav-item"         data-section="admins">Admin Users</button>
         <button class="nav-item"         data-section="integrations">Integrations</button>
         <button class="nav-item"         data-section="appearance">Appearance</button>
+        <button class="nav-item"         data-section="events">Event Mode</button>
       </nav>
       <div class="sidebar-footer">
         <button class="btn-logout" onclick="doLogout()">Sign Out</button>
@@ -355,6 +356,20 @@
           <div id="fontPreview" style="margin-top:12px;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:1.3rem;color:rgba(255,255,255,0.65);letter-spacing:0.02em;">
             The quick brown fox jumps over the lazy dog — 0123456789
           </div>
+
+          <div class="setting-row" style="margin-top:20px;">
+            <label class="setting-label" for="fontWeightTitle">Title Weight: <span id="fontWeightTitleLbl">300</span></label>
+            <input type="range" class="admin-input" id="fontWeightTitle" min="100" max="900" step="100" value="300"
+              style="max-width:240px;padding:6px 0;cursor:pointer;"
+              oninput="liveFontWeight('title', this.value)" />
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="fontWeightBody">Body Weight: <span id="fontWeightBodyLbl">400</span></label>
+            <input type="range" class="admin-input" id="fontWeightBody" min="100" max="900" step="100" value="400"
+              style="max-width:240px;padding:6px 0;cursor:pointer;"
+              oninput="liveFontWeight('body', this.value)" />
+          </div>
+
           <button class="btn btn-white" onclick="saveSettings()" style="margin-top:18px;">Save</button>
         </div>
 
@@ -390,6 +405,81 @@
           <p style="margin-top:10px;font-size:0.78rem;color:rgba(255,255,255,0.3);">
             PNG or SVG with transparent background recommended. Max 5 MB.
           </p>
+        </div>
+      </section>
+
+      <!-- Event Mode Section -->
+      <section id="sec-events" class="section">
+        <h2 class="section-title">Event Mode</h2>
+
+        <div class="card">
+          <h3>Event Settings</h3>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+            When enabled, the kiosk shows a list of approved visitors instead of the normal check-in flow.
+            Visitors self-select from the list and check in or out with a single tap.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label">Event Mode</label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="eventModeEnabled"
+                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Enable on kiosk</span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="eventName">Event Name</label>
+            <input type="text" class="admin-input" id="eventName"
+              placeholder="e.g. Company Gala 2026" style="max-width:320px;" />
+          </div>
+          <button class="btn btn-white" onclick="saveEventSettings()">Save Event Settings</button>
+        </div>
+
+        <div class="card">
+          <h3>Approved Visitors</h3>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+            Only visitors on this list can check in during Event Mode. CSV must have
+            <code style="font-size:0.78rem;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">firstName</code>,
+            <code style="font-size:0.78rem;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">lastName</code>
+            columns. A <code style="font-size:0.78rem;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px;">company</code>
+            column is optional.
+          </p>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+            <div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:4px;">First Name</div>
+              <input type="text" class="admin-input" id="evFirstName" placeholder="First" style="max-width:150px;" />
+            </div>
+            <div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:4px;">Last Name</div>
+              <input type="text" class="admin-input" id="evLastName" placeholder="Last" style="max-width:150px;" />
+            </div>
+            <div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:4px;">Company (optional)</div>
+              <input type="text" class="admin-input" id="evCompany" placeholder="Company" style="max-width:180px;" />
+            </div>
+            <button class="btn btn-white" onclick="addEventVisitor()">Add</button>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:24px;">
+            <input type="file" id="eventCsvFile" accept=".csv" class="admin-input" style="max-width:260px;" />
+            <button class="btn btn-white" onclick="importEventVisitorCSV()">Import CSV</button>
+            <button class="btn btn-danger" onclick="clearEventVisitors()"
+              style="margin-left:auto;">Clear All</button>
+            <span id="eventCsvResult" style="font-size:0.8rem;color:rgba(255,255,255,0.4);"></span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="eventVisitorTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Company</th>
+                  <th style="width:80px;"></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </section>
 

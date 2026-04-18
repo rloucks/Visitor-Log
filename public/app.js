@@ -164,6 +164,9 @@ function applyTheme(s) {
   const opacity    = s.uiSurfaceOpacity !== undefined ? parseInt(s.uiSurfaceOpacity, 10) / 100 : 1;
   root.style.setProperty('--surface', hexToRgba(surfaceHex, opacity));
 
+  if (s.fontWeightTitle) root.style.setProperty('--font-weight-title', s.fontWeightTitle);
+  if (s.fontWeightBody)  root.style.setProperty('--font-weight-body',  s.fontWeightBody);
+
   const font = s.uiFont || 'Roboto';
   if (font !== 'Roboto') {
     const link = document.createElement('link');
@@ -281,12 +284,23 @@ function clearInactivityTimer() {
 }
 
 // ============================================================
-// Step 1 — Select Host
+// Step 1 — Select Host  (or route to Event Mode)
 // ============================================================
 async function startCheckin() {
-  showScreen('step1');
   resetInactivityTimer();
 
+  // Check if event mode is active
+  try {
+    const res  = await fetch('/api/visitor/event');
+    const data = await res.json();
+    if (data.eventMode) {
+      loadEventScreen(data);
+      return;
+    }
+  } catch {}
+
+  // Normal mode
+  showScreen('step1');
   const select = document.getElementById('employeeSelect');
   select.innerHTML = '<option value="">Loading…</option>';
 
@@ -310,6 +324,139 @@ async function startCheckin() {
   } catch {
     select.innerHTML = '<option value="" disabled>Failed to load employees</option>';
   }
+}
+
+// ============================================================
+// Event Mode
+// ============================================================
+let eventVisitors          = [];
+let selectedEventVisitor   = null;
+
+function htmlEsc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function loadEventScreen(data) {
+  document.getElementById('eventTitle').textContent = data.eventName || 'Event Check-In';
+  eventVisitors = data.visitors || [];
+  document.getElementById('eventSearch').value = '';
+  renderEventVisitors(eventVisitors);
+  showScreen('event-step1');
+}
+
+function filterEventVisitors() {
+  const q = document.getElementById('eventSearch').value.toLowerCase().trim();
+  const filtered = q
+    ? eventVisitors.filter(v =>
+        `${v.firstName} ${v.lastName}`.toLowerCase().includes(q) ||
+        (v.company || '').toLowerCase().includes(q))
+    : eventVisitors;
+  renderEventVisitors(filtered);
+}
+
+function renderEventVisitors(list) {
+  const container = document.getElementById('eventVisitorList');
+  if (!list.length) {
+    container.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.3);padding:24px 0;">No visitors found.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  list.forEach(v => {
+    const item = document.createElement('div');
+    item.className = `event-visitor-item${v.checkedIn ? ' checked-in' : ''}`;
+
+    const info = document.createElement('div');
+    info.className = 'event-visitor-info';
+
+    const name = document.createElement('div');
+    name.className   = 'event-visitor-name';
+    name.textContent = `${v.firstName} ${v.lastName}`;
+    info.appendChild(name);
+
+    if (v.company) {
+      const company = document.createElement('div');
+      company.className   = 'event-visitor-company';
+      company.textContent = v.company;
+      info.appendChild(company);
+    }
+
+    const status = document.createElement('div');
+    status.className   = `event-visitor-status ${v.checkedIn ? 'status-in' : 'status-out'}`;
+    status.textContent = v.checkedIn ? 'Checked In ✓' : 'Not Yet In';
+
+    item.appendChild(info);
+    item.appendChild(status);
+    item.addEventListener('click', () => selectEventVisitor(v));
+    container.appendChild(item);
+  });
+}
+
+function selectEventVisitor(v) {
+  selectedEventVisitor = v;
+  resetInactivityTimer();
+
+  const fullName = `${v.firstName} ${v.lastName}`;
+  document.getElementById('eventVisitorName').textContent = fullName;
+
+  if (v.checkedIn) {
+    document.getElementById('eventActionTitle').textContent  = 'Check Out';
+    document.getElementById('eventActionDetail').textContent = 'Your visit duration will be recorded automatically.';
+    document.getElementById('eventActionBtn').textContent    = 'Check Out';
+  } else {
+    document.getElementById('eventActionTitle').textContent  = 'Check In';
+    document.getElementById('eventActionDetail').textContent = 'Tap confirm to register your arrival.';
+    document.getElementById('eventActionBtn').textContent    = 'Check In';
+  }
+
+  document.getElementById('eventActionBtn').disabled = false;
+  showScreen('event-step2');
+}
+
+async function submitEventAction() {
+  if (!selectedEventVisitor) return;
+
+  const btn = document.getElementById('eventActionBtn');
+  btn.disabled = true;
+
+  try {
+    if (selectedEventVisitor.checkedIn) {
+      const res = await fetch('/api/visitor/event-checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ visitorRecordId: selectedEventVisitor.visitorRecordId })
+      });
+      if (!res.ok) throw new Error('Checkout failed');
+      const data = await res.json();
+      document.getElementById('successMessage').textContent =
+        `Thanks ${selectedEventVisitor.firstName}! You were here for ${fmtEventStay(data.stayHours, data.stayMinutes)}.`;
+    } else {
+      const res = await fetch('/api/visitor/event-checkin', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ eventVisitorId: selectedEventVisitor.id })
+      });
+      if (!res.ok) throw new Error('Check-in failed');
+      document.getElementById('successMessage').textContent =
+        `Welcome, ${selectedEventVisitor.firstName}! Enjoy the event.`;
+    }
+
+    showScreen('step3');
+    startCountdown();
+  } catch {
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+  }
+}
+
+function fmtEventStay(h, m) {
+  h = h || 0; m = m || 0;
+  if (h === 0 && m === 0) return 'a short time';
+  if (h === 0) return `${m} minute${m !== 1 ? 's' : ''}`;
+  if (m === 0) return `${h} hour${h !== 1 ? 's' : ''}`;
+  return `${h}h ${m}m`;
 }
 
 function confirmHost() {
