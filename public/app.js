@@ -32,6 +32,23 @@ function startClock() {
 // ============================================================
 // Settings & Vanta Init
 // ============================================================
+
+// Fallback defaults used when no saved options exist for an effect
+const VANTA_DEFAULTS = {
+  NET:    { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },
+  DOTS:   { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 3, spacing: 35, speed: 1.5 },
+  WAVES:  { color: '#1a3a6b', backgroundColor: '#000000', waveHeight: 20, waveSpeed: 1, shininess: 30, zoom: 1 },
+  BIRDS:  { color1: '#ff6600', color2: '#0066ff', backgroundColor: '#000000', quantity: 3, birdSize: 1.5, speedLimit: 5, separation: 20 },
+  RINGS:  { color: '#ffffff', backgroundColor: '#000000', backgroundAlpha: 1, amplitudeFactor: 1, size: 1, speed: 1 },
+  CELLS:  { color1: '#ffffff', color2: '#888888', color3: '#444444', backgroundColor: '#000000', size: 1.5, speed: 1.5 },
+  FOG:    { highlightColor: '#ff6633', midtoneColor: '#222244', lowlightColor: '#000011', backgroundColor: '#000000', blurFactor: 0.6, speed: 1.5, zoom: 1 },
+  GLOBE:  { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 1, speed: 1 },
+  HALO:   { baseColor: '#0066ff', backgroundColor: '#000000', amplitudeFactor: 1, size: 1.5, xOffset: 0, yOffset: 0 },
+  RIPPLE: { color: '#0044ff', backgroundColor: '#000000', waveHeight: 30, waveSpeed: 1, zoom: 1 },
+  CLOUDS: { backgroundColor: '#111111', skyColor: '#68b8d7', cloudColor: '#adc4c8', cloudShadowColor: '#183550', sunColor: '#ff9919', speed: 1 },
+  NONE:   { backgroundColor: '#000000' },
+};
+
 async function loadSettings() {
   try {
     const res = await fetch('/api/admin/settings');
@@ -49,13 +66,11 @@ async function loadSettings() {
       document.getElementById('logoContainer').appendChild(img);
     }
 
-    await initVanta(
-      s.vantaEffect  || 'NET',
-      s.vantaColor1  || '#ffffff',
-      s.vantaColor2  || '#444444',
-      s.vantaBgColor || '#000000',
-      s.vantaSpeed   || '1.5'
-    );
+    const effect  = s.vantaEffect || 'NET';
+    const allOpts = s.vantaOptions ? JSON.parse(s.vantaOptions) : {};
+    const opts    = allOpts[effect] || VANTA_DEFAULTS[effect] || VANTA_DEFAULTS.NET;
+
+    await initVanta(effect, opts);
   } catch {
     document.getElementById('bgContainer').style.background = '#000000';
   }
@@ -65,65 +80,56 @@ async function loadSettings() {
 // Vanta Background
 // ============================================================
 
-// Maps our generic settings to effect-specific Vanta params.
-// Colors are passed as integers (0xRRGGBB) as Vanta expects.
-const VANTA_PARAMS = {
-  NET:      (c1, c2, bg, spd) => ({ color: c1, backgroundColor: bg, points: 8, maxDistance: 25, spacing: 20, speed: spd }),
-  DOTS:     (c1, c2, bg, spd) => ({ color: c1, color2: c2, backgroundColor: bg, size: 3, spacing: 30, speed: spd }),
-  WAVES:    (c1, c2, bg, spd) => ({ color: c1, backgroundColor: bg, waveSpeed: spd * 0.5, waveHeight: 20 }),
-  BIRDS:    (c1, c2, bg, spd) => ({ color1: c1, color2: c2, backgroundColor: bg, speedLimit: Math.max(1, spd * 3), quantity: 3 }),
-  RINGS:    (c1, c2, bg, spd) => ({ color: c1, backgroundColor: bg, backgroundAlpha: 1 }),
-  CELLS:    (c1, c2, bg, spd) => ({ color1: c1, color2: c2, backgroundColor: bg, size: 1.5, speed: spd }),
-  FOG:      (c1, c2, bg, spd) => ({ highlightColor: c1, midtoneColor: c2, lowlightColor: bg, backgroundColor: bg, speed: spd }),
-  GLOBE:    (c1, c2, bg, spd) => ({ color: c1, color2: c2, backgroundColor: bg, size: 1 }),
-  TOPOLOGY: (c1, c2, bg, spd) => ({ color: c1, backgroundColor: bg }),
-};
-
 function hexToInt(hex) {
   return parseInt((hex || '#000000').replace('#', ''), 16);
+}
+
+// Convert any hex string values in an options object to integers for Vanta
+function processVantaOpts(opts) {
+  const hexRe = /^#[0-9a-fA-F]{6}$/;
+  const out   = {};
+  for (const [k, v] of Object.entries(opts)) {
+    out[k] = (typeof v === 'string' && hexRe.test(v)) ? hexToInt(v) : v;
+  }
+  return out;
 }
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src    = src;
+    const s   = document.createElement('script');
+    s.src     = src;
     s.onload  = resolve;
     s.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(s);
   });
 }
 
-async function initVanta(effect, color1, color2, bgColor, speed) {
+async function initVanta(effect, opts) {
   const container = document.getElementById('bgContainer');
-  container.style.background = bgColor || '#000000';
+  container.style.background = opts.backgroundColor || '#000000';
 
   if (!effect || effect === 'NONE') return;
 
   const key = effect.toUpperCase();
-  if (!VANTA_PARAMS[key]) return;
 
   try {
     if (!window.VANTA?.[key]) {
       await loadScript(`https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.${key.toLowerCase()}.min.js`);
     }
 
-    // Destroy previous instance safely
     try { window._vantaEffect?.destroy(); } catch {}
     window._vantaEffect = null;
 
-    const spd    = parseFloat(speed) || 1.5;
-    const params = VANTA_PARAMS[key](hexToInt(color1), hexToInt(color2), hexToInt(bgColor), spd);
-
     window._vantaEffect = window.VANTA[key]({
-      THREE,                       // pass THREE explicitly — Vanta doesn't always find window.THREE
+      THREE,
       el:            container,
       mouseControls: false,
       touchControls: false,
       gyroControls:  false,
       minHeight:     window.innerHeight,
       minWidth:      window.innerWidth,
-      ...params
+      ...processVantaOpts(opts)
     });
   } catch (err) {
     console.warn('Vanta init failed:', err.message);

@@ -40,17 +40,30 @@ db.prepare(`
   )
 `).run();
 
+// Default per-effect Vanta options (stored as JSON string)
+const defaultVantaOptions = JSON.stringify({
+  NET:    { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },
+  DOTS:   { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 3, spacing: 35, speed: 1.5 },
+  WAVES:  { color: '#1a3a6b', backgroundColor: '#000000', waveHeight: 20, waveSpeed: 1, shininess: 30, zoom: 1 },
+  BIRDS:  { color1: '#ff6600', color2: '#0066ff', backgroundColor: '#000000', quantity: 3, birdSize: 1.5, speedLimit: 5, separation: 20 },
+  RINGS:  { color: '#ffffff', backgroundColor: '#000000', backgroundAlpha: 1, amplitudeFactor: 1, size: 1, speed: 1 },
+  CELLS:  { color1: '#ffffff', color2: '#888888', color3: '#444444', backgroundColor: '#000000', size: 1.5, speed: 1.5 },
+  FOG:    { highlightColor: '#ff6633', midtoneColor: '#222244', lowlightColor: '#000011', backgroundColor: '#000000', blurFactor: 0.6, speed: 1.5, zoom: 1 },
+  GLOBE:  { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 1, speed: 1 },
+  HALO:   { baseColor: '#0066ff', backgroundColor: '#000000', amplitudeFactor: 1, size: 1.5, xOffset: 0, yOffset: 0 },
+  RIPPLE: { color: '#0044ff', backgroundColor: '#000000', waveHeight: 30, waveSpeed: 1, zoom: 1 },
+  CLOUDS: { backgroundColor: '#111111', skyColor: '#68b8d7', cloudColor: '#adc4c8', cloudShadowColor: '#183550', sunColor: '#ff9919', speed: 1 },
+  NONE:   { backgroundColor: '#000000' },
+});
+
 // Default settings
 const defaults = {
-  companyName:  'Visitor Check-In',
-  logoPath:     '',
-  slackWebhookUrl: '',
-  n8nWebhookUrl:   '',
-  vantaEffect:  'NET',
-  vantaColor1:  '#ffffff',
-  vantaColor2:  '#444444',
-  vantaBgColor: '#000000',
-  vantaSpeed:   '1.5'
+  companyName:      'Visitor Check-In',
+  logoPath:         '',
+  slackWebhookUrl:  '',
+  n8nWebhookUrl:    '',
+  vantaEffect:      'NET',
+  vantaOptions:     defaultVantaOptions,
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

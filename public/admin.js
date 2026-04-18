@@ -396,22 +396,164 @@ async function testSlack() {
 }
 
 // ============================================================
-// Appearance
+// Appearance — per-effect control schemas
 // ============================================================
+const EFFECT_CONTROLS = {
+  NET: [
+    { key: 'color',           label: 'Node & Line Color',    type: 'color', def: '#ffffff' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'points',          label: 'Node Count',           type: 'range', min: 2,    max: 20,  step: 1,    def: 8 },
+    { key: 'maxDistance',     label: 'Connection Distance',  type: 'range', min: 10,   max: 40,  step: 1,    def: 25 },
+    { key: 'spacing',         label: 'Spacing',              type: 'range', min: 5,    max: 30,  step: 1,    def: 20 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1.5 },
+  ],
+  DOTS: [
+    { key: 'color',           label: 'Dot Color',            type: 'color', def: '#ffffff' },
+    { key: 'color2',          label: 'Glow Color',           type: 'color', def: '#444444' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'size',            label: 'Dot Size',             type: 'range', min: 1,    max: 8,   step: 0.5,  def: 3 },
+    { key: 'spacing',         label: 'Spacing',              type: 'range', min: 20,   max: 60,  step: 5,    def: 35 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1.5 },
+  ],
+  WAVES: [
+    { key: 'color',           label: 'Wave Color',           type: 'color', def: '#1a3a6b' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'waveHeight',      label: 'Wave Height',          type: 'range', min: 5,    max: 40,  step: 1,    def: 20 },
+    { key: 'waveSpeed',       label: 'Wave Speed',           type: 'range', min: 0.25, max: 2,   step: 0.25, def: 1 },
+    { key: 'shininess',       label: 'Shininess (0 = flat)', type: 'range', min: 0,    max: 150, step: 5,    def: 30 },
+    { key: 'zoom',            label: 'Zoom',                 type: 'range', min: 0.5,  max: 2,   step: 0.1,  def: 1 },
+  ],
+  BIRDS: [
+    { key: 'color1',          label: 'Bird Color 1',         type: 'color', def: '#ff6600' },
+    { key: 'color2',          label: 'Bird Color 2',         type: 'color', def: '#0066ff' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'quantity',        label: 'Flock Size',           type: 'range', min: 1,    max: 5,   step: 1,    def: 3 },
+    { key: 'birdSize',        label: 'Bird Size',            type: 'range', min: 0.5,  max: 3,   step: 0.25, def: 1.5 },
+    { key: 'speedLimit',      label: 'Speed',                type: 'range', min: 1,    max: 10,  step: 0.5,  def: 5 },
+    { key: 'separation',      label: 'Separation',           type: 'range', min: 5,    max: 100, step: 5,    def: 20 },
+  ],
+  RINGS: [
+    { key: 'color',           label: 'Ring Color',           type: 'color', def: '#ffffff' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'backgroundAlpha', label: 'Background Opacity',   type: 'range', min: 0,    max: 1,   step: 0.05, def: 1 },
+    { key: 'amplitudeFactor', label: 'Amplitude',            type: 'range', min: 0.1,  max: 3,   step: 0.1,  def: 1 },
+    { key: 'size',            label: 'Ring Size',            type: 'range', min: 0.5,  max: 3,   step: 0.1,  def: 1 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1 },
+  ],
+  CELLS: [
+    { key: 'color1',          label: 'Cell Color 1',         type: 'color', def: '#ffffff' },
+    { key: 'color2',          label: 'Cell Color 2',         type: 'color', def: '#888888' },
+    { key: 'color3',          label: 'Cell Color 3',         type: 'color', def: '#444444' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'size',            label: 'Cell Size',            type: 'range', min: 0.5,  max: 5,   step: 0.25, def: 1.5 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1.5 },
+  ],
+  FOG: [
+    { key: 'highlightColor',  label: 'Highlight',            type: 'color', def: '#ff6633' },
+    { key: 'midtoneColor',    label: 'Midtone',              type: 'color', def: '#222244' },
+    { key: 'lowlightColor',   label: 'Shadow',               type: 'color', def: '#000011' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'blurFactor',      label: 'Blur',                 type: 'range', min: 0.1,  max: 1,   step: 0.05, def: 0.6 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1.5 },
+    { key: 'zoom',            label: 'Zoom',                 type: 'range', min: 0.5,  max: 2,   step: 0.1,  def: 1 },
+  ],
+  GLOBE: [
+    { key: 'color',           label: 'Globe Color',          type: 'color', def: '#ffffff' },
+    { key: 'color2',          label: 'Atmosphere Color',     type: 'color', def: '#444444' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'size',            label: 'Globe Size',           type: 'range', min: 0.25, max: 2,   step: 0.25, def: 1 },
+    { key: 'speed',           label: 'Speed',                type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1 },
+  ],
+  HALO: [
+    { key: 'baseColor',       label: 'Halo Color',           type: 'color', def: '#0066ff' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'amplitudeFactor', label: 'Pulse Amplitude',      type: 'range', min: 0.5,  max: 3,   step: 0.1,  def: 1 },
+    { key: 'size',            label: 'Halo Size',            type: 'range', min: 0.5,  max: 3,   step: 0.1,  def: 1.5 },
+    { key: 'xOffset',         label: 'Horizontal Position',  type: 'range', min: -0.5, max: 0.5, step: 0.05, def: 0 },
+    { key: 'yOffset',         label: 'Vertical Position',    type: 'range', min: -0.5, max: 0.5, step: 0.05, def: 0 },
+  ],
+  RIPPLE: [
+    { key: 'color',           label: 'Ripple Color',         type: 'color', def: '#0044ff' },
+    { key: 'backgroundColor', label: 'Background',           type: 'color', def: '#000000' },
+    { key: 'waveHeight',      label: 'Wave Height',          type: 'range', min: 5,    max: 60,  step: 1,    def: 30 },
+    { key: 'waveSpeed',       label: 'Wave Speed',           type: 'range', min: 0.25, max: 2,   step: 0.25, def: 1 },
+    { key: 'zoom',            label: 'Zoom',                 type: 'range', min: 0.5,  max: 2,   step: 0.1,  def: 1 },
+  ],
+  CLOUDS: [
+    { key: 'backgroundColor',  label: 'Ground Color',        type: 'color', def: '#111111' },
+    { key: 'skyColor',         label: 'Sky Color',           type: 'color', def: '#68b8d7' },
+    { key: 'cloudColor',       label: 'Cloud Color',         type: 'color', def: '#adc4c8' },
+    { key: 'cloudShadowColor', label: 'Cloud Shadow',        type: 'color', def: '#183550' },
+    { key: 'sunColor',         label: 'Sun Color',           type: 'color', def: '#ff9919' },
+    { key: 'speed',            label: 'Speed',               type: 'range', min: 0.5,  max: 4,   step: 0.5,  def: 1 },
+  ],
+  NONE: [
+    { key: 'backgroundColor', label: 'Background Color',     type: 'color', def: '#000000' },
+  ],
+};
+
+// Holds per-effect settings loaded from server; updated on save
+let vantaOptions = {};
+
+function onEffectChange() {
+  const effect = document.getElementById('settingVantaEffect').value;
+  renderEffectControls(effect);
+}
+
+function renderEffectControls(effect) {
+  const container = document.getElementById('vantaEffectControls');
+  const controls  = EFFECT_CONTROLS[effect];
+  if (!controls?.length) { container.innerHTML = ''; return; }
+
+  const saved = vantaOptions[effect] || {};
+
+  container.innerHTML = controls.map(c => {
+    const val = saved[c.key] !== undefined ? saved[c.key] : c.def;
+    const id  = `vopt_${c.key}`;
+
+    if (c.type === 'color') {
+      return `
+        <div class="setting-row">
+          <label class="setting-label" for="${id}">${esc(c.label)}</label>
+          <input type="color" class="admin-input" id="${id}" value="${val}"
+            style="max-width:60px;height:36px;padding:2px;cursor:pointer;" />
+        </div>`;
+    }
+    return `
+      <div class="setting-row">
+        <label class="setting-label" for="${id}">${esc(c.label)}: <span id="${id}_lbl">${val}</span></label>
+        <input type="range" class="admin-input" id="${id}"
+          min="${c.min}" max="${c.max}" step="${c.step}" value="${val}"
+          style="max-width:240px;padding:6px 0;cursor:pointer;"
+          oninput="document.getElementById('${id}_lbl').textContent=this.value" />
+      </div>`;
+  }).join('');
+}
+
+function collectEffectValues(effect) {
+  const controls = EFFECT_CONTROLS[effect];
+  if (!controls) return {};
+  const opts = {};
+  for (const c of controls) {
+    const el = document.getElementById(`vopt_${c.key}`);
+    if (!el) continue;
+    opts[c.key] = c.type === 'range' ? parseFloat(el.value) : el.value;
+  }
+  return opts;
+}
+
 async function loadAppearanceSettings() {
   try {
     const res = await fetch('/api/admin/settings');
     const s   = await res.json();
 
-    document.getElementById('settingCompanyName').value    = s.companyName    || '';
-    document.getElementById('settingVantaEffect').value    = s.vantaEffect    || 'NET';
-    document.getElementById('settingColor1').value         = s.vantaColor1    || '#ffffff';
-    document.getElementById('settingColor2').value         = s.vantaColor2    || '#444444';
-    document.getElementById('settingBgColor').value        = s.vantaBgColor   || '#000000';
+    document.getElementById('settingCompanyName').value = s.companyName || '';
 
-    const speed = s.vantaSpeed || '1.5';
-    document.getElementById('settingSpeed').value          = speed;
-    document.getElementById('speedLabel').textContent      = speed;
+    const effect = s.vantaEffect || 'NET';
+    document.getElementById('settingVantaEffect').value = effect;
+
+    vantaOptions = s.vantaOptions ? JSON.parse(s.vantaOptions) : {};
+    renderEffectControls(effect);
 
     const logoEl = document.getElementById('currentLogo');
     if (s.logoPath) {
@@ -427,15 +569,14 @@ async function loadAppearanceSettings() {
 async function saveSettings() {
   const companyName  = document.getElementById('settingCompanyName').value.trim();
   const vantaEffect  = document.getElementById('settingVantaEffect').value;
-  const vantaColor1  = document.getElementById('settingColor1').value;
-  const vantaColor2  = document.getElementById('settingColor2').value;
-  const vantaBgColor = document.getElementById('settingBgColor').value;
-  const vantaSpeed   = document.getElementById('settingSpeed').value;
+
+  // Collect current controls into vantaOptions
+  vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
 
   const res = await fetch('/api/admin/settings', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ companyName, vantaEffect, vantaColor1, vantaColor2, vantaBgColor, vantaSpeed })
+    body:    JSON.stringify({ companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions) })
   });
 
   if (res.ok) showToast('Settings saved.');
