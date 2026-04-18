@@ -34,10 +34,13 @@ router.post('/checkin', async (req, res) => {
     return res.status(400).json({ error: 'First name, last name, and host are required.' });
   }
 
+  const stayHours   = parseInt(req.body.stayHours,   10) || 0;
+  const stayMinutes = parseInt(req.body.stayMinutes,  10) || 0;
+
   db.prepare(`
-    INSERT INTO visitors (firstName, lastName, company, host)
-    VALUES (?, ?, ?, ?)
-  `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim());
+    INSERT INTO visitors (firstName, lastName, company, host, stayHours, stayMinutes)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim(), stayHours, stayMinutes);
 
   // Look up the host's Slack user ID from employees table
   const employee = db.prepare('SELECT slackUserId FROM employees WHERE LOWER(name) = LOWER(?)').get(host.trim());

@@ -42,11 +42,15 @@ db.prepare(`
 
 // Default settings
 const defaults = {
-  companyName: 'Visitor Check-In',
-  backgroundStyle: 'particles',
-  logoPath: '',
+  companyName:  'Visitor Check-In',
+  logoPath:     '',
   slackWebhookUrl: '',
-  n8nWebhookUrl: ''
+  n8nWebhookUrl:   '',
+  vantaEffect:  'NET',
+  vantaColor1:  '#ffffff',
+  vantaColor2:  '#444444',
+  vantaBgColor: '#000000',
+  vantaSpeed:   '1.5'
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);
@@ -61,5 +65,9 @@ if (adminCount.count === 0) {
   db.prepare('INSERT INTO admins (username, passwordHash) VALUES (?, ?)').run('admin', hash);
   console.log('\x1b[33m[!] Default admin created — username: admin / password: admin. Change this password immediately!\x1b[0m');
 }
+
+// Migrations — safe to run on every start
+try { db.prepare('ALTER TABLE visitors ADD COLUMN stayHours INTEGER NOT NULL DEFAULT 0').run(); } catch {}
+try { db.prepare('ALTER TABLE visitors ADD COLUMN stayMinutes INTEGER NOT NULL DEFAULT 0').run(); } catch {}
 
 module.exports = db;

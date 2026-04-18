@@ -400,8 +400,15 @@ async function loadAppearanceSettings() {
     const res = await fetch('/api/admin/settings');
     const s   = await res.json();
 
-    document.getElementById('settingCompanyName').value = s.companyName || '';
-    document.getElementById('settingBg').value          = s.backgroundStyle || 'particles';
+    document.getElementById('settingCompanyName').value    = s.companyName    || '';
+    document.getElementById('settingVantaEffect').value    = s.vantaEffect    || 'NET';
+    document.getElementById('settingColor1').value         = s.vantaColor1    || '#ffffff';
+    document.getElementById('settingColor2').value         = s.vantaColor2    || '#444444';
+    document.getElementById('settingBgColor').value        = s.vantaBgColor   || '#000000';
+
+    const speed = s.vantaSpeed || '1.5';
+    document.getElementById('settingSpeed').value          = speed;
+    document.getElementById('speedLabel').textContent      = speed;
 
     const logoEl = document.getElementById('currentLogo');
     if (s.logoPath) {
@@ -415,13 +422,17 @@ async function loadAppearanceSettings() {
 }
 
 async function saveSettings() {
-  const companyName     = document.getElementById('settingCompanyName').value.trim();
-  const backgroundStyle = document.getElementById('settingBg').value;
+  const companyName  = document.getElementById('settingCompanyName').value.trim();
+  const vantaEffect  = document.getElementById('settingVantaEffect').value;
+  const vantaColor1  = document.getElementById('settingColor1').value;
+  const vantaColor2  = document.getElementById('settingColor2').value;
+  const vantaBgColor = document.getElementById('settingBgColor').value;
+  const vantaSpeed   = document.getElementById('settingSpeed').value;
 
   const res = await fetch('/api/admin/settings', {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ companyName, backgroundStyle })
+    body:    JSON.stringify({ companyName, vantaEffect, vantaColor1, vantaColor2, vantaBgColor, vantaSpeed })
   });
 
   if (res.ok) showToast('Settings saved.');

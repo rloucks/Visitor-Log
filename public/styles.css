@@ -38,13 +38,42 @@ body {
 .hidden { display: none !important; }
 
 /* ============================================================
-   Canvas Background (kiosk only)
+   Vanta Background (kiosk only)
    ============================================================ */
-#bgCanvas {
+#bgContainer {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+}
+
+/* ============================================================
+   Fixed Kiosk Clock
+   ============================================================ */
+.kiosk-clock {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.clock-time {
+  font-size: 3.6rem;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.clock-date {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 5px;
 }
 
 /* ============================================================
@@ -92,26 +121,6 @@ body {
   max-width: 100%;
   max-height: 120px;
   object-fit: contain;
-}
-
-.idle-clock {
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.clock-time {
-  font-size: 4rem;
-  font-weight: 200;
-  letter-spacing: 0.06em;
-  line-height: 1;
-}
-
-.clock-date {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-top: 6px;
 }
 
 .tap-pulse {
@@ -344,6 +353,45 @@ body {
 .btn-primary:hover  { opacity: 0.85; }
 .btn-primary:active { opacity: 0.75; }
 .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ============================================================
+   Stay Duration (Step 2)
+   ============================================================ */
+.stay-row {
+  margin-bottom: 18px;
+}
+
+.stay-label {
+  display: block;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+
+.stay-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.stay-select {
+  flex: 1;
+  background: var(--accent);
+  color: #000000;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color var(--transition);
+}
+
+.stay-select:focus {
+  border-color: rgba(0, 0, 0, 0.3);
+}
 
 /* ============================================================
    Success Screen (Step 3)

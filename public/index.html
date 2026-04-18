@@ -11,15 +11,18 @@
 </head>
 <body>
 
-  <canvas id="bgCanvas"></canvas>
+  <!-- Vanta background container -->
+  <div id="bgContainer"></div>
+
+  <!-- Fixed clock — always visible -->
+  <div class="kiosk-clock">
+    <div id="idleTime" class="clock-time">00:00</div>
+    <div id="idleDate" class="clock-date">Loading…</div>
+  </div>
 
   <!-- Idle Screen -->
   <div id="idle" class="screen active" onclick="startCheckin()">
     <div class="idle-content">
-      <div class="idle-clock">
-        <div id="idleTime" class="clock-time">00:00</div>
-        <div id="idleDate" class="clock-date">Loading…</div>
-      </div>
       <div id="logoContainer" class="logo-container"></div>
       <div class="tap-prompt">
         <div class="tap-pulse"></div>
@@ -43,12 +46,10 @@
         </div>
       </div>
       <h2>Who are you here to see?</h2>
-      <div id="employeeDropdownWrap">
-        <select id="employeeSelect" class="employee-select">
-          <option value="">Loading employees…</option>
-        </select>
-        <button class="btn-primary" onclick="confirmHost()">Next →</button>
-      </div>
+      <select id="employeeSelect" class="employee-select">
+        <option value="">Loading employees…</option>
+      </select>
+      <button class="btn-primary" onclick="confirmHost()">Next →</button>
     </div>
   </div>
 
@@ -70,12 +71,36 @@
 
       <div class="form-group">
         <input id="firstName" type="text" placeholder="First Name" autocomplete="off" oninput="onNameInput()" />
-        <input id="lastName" type="text" placeholder="Last Name" autocomplete="off" oninput="onNameInput()" />
-        <input id="company" type="text" placeholder="Company" autocomplete="off" />
+        <input id="lastName"  type="text" placeholder="Last Name"  autocomplete="off" oninput="onNameInput()" />
+        <input id="company"   type="text" placeholder="Company"    autocomplete="off" />
       </div>
 
       <div id="returningBadge" class="returning-badge hidden">
         Welcome back! We've filled in your details.
+      </div>
+
+      <div class="stay-row">
+        <label class="stay-label">Expected length of visit:</label>
+        <div class="stay-inputs">
+          <select id="stayHours" class="stay-select">
+            <option value="0">0 hrs</option>
+            <option value="1">1 hr</option>
+            <option value="2">2 hrs</option>
+            <option value="3">3 hrs</option>
+            <option value="4">4 hrs</option>
+            <option value="5">5 hrs</option>
+            <option value="6">6 hrs</option>
+            <option value="7">7 hrs</option>
+            <option value="8">8 hrs</option>
+          </select>
+          <select id="stayMinutes" class="stay-select">
+            <option value="0">0 min</option>
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+          </select>
+        </div>
       </div>
 
       <button class="btn-primary" id="checkinBtn" onclick="submitForm()">Check In</button>
