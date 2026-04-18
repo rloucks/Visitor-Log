@@ -64,6 +64,9 @@ const defaults = {
   n8nWebhookUrl:    '',
   vantaEffect:      'NET',
   vantaOptions:     defaultVantaOptions,
+  clockTimezone:    'America/New_York',
+  clockFormat:      '12',
+  clockPosition:    'top-center',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

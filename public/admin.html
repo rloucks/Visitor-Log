@@ -196,7 +196,81 @@
             <label class="setting-label" for="settingCompanyName">Display Name</label>
             <input class="admin-input" id="settingCompanyName" placeholder="Company or system name" style="max-width:320px;" />
           </div>
+          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
         </div>
+
+        <div class="card">
+          <h3>Clock</h3>
+          <div class="setting-row">
+            <label class="setting-label" for="clockTimezone">Timezone</label>
+            <select class="admin-input" id="clockTimezone" style="max-width:280px;">
+              <optgroup label="United States">
+                <option value="America/New_York">Eastern — New York</option>
+                <option value="America/Chicago">Central — Chicago</option>
+                <option value="America/Denver">Mountain — Denver</option>
+                <option value="America/Phoenix">Mountain (no DST) — Phoenix</option>
+                <option value="America/Los_Angeles">Pacific — Los Angeles</option>
+                <option value="America/Anchorage">Alaska — Anchorage</option>
+                <option value="Pacific/Honolulu">Hawaii — Honolulu</option>
+              </optgroup>
+              <optgroup label="Canada">
+                <option value="America/Toronto">Eastern — Toronto</option>
+                <option value="America/Winnipeg">Central — Winnipeg</option>
+                <option value="America/Edmonton">Mountain — Edmonton</option>
+                <option value="America/Vancouver">Pacific — Vancouver</option>
+              </optgroup>
+              <optgroup label="Europe">
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Paris">Paris (CET)</option>
+                <option value="Europe/Berlin">Berlin (CET)</option>
+                <option value="Europe/Madrid">Madrid</option>
+                <option value="Europe/Rome">Rome</option>
+                <option value="Europe/Moscow">Moscow</option>
+              </optgroup>
+              <optgroup label="Asia / Middle East">
+                <option value="Asia/Dubai">Dubai (GST)</option>
+                <option value="Asia/Kolkata">India (IST)</option>
+                <option value="Asia/Singapore">Singapore</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Asia/Shanghai">China (CST)</option>
+                <option value="Asia/Seoul">Seoul (KST)</option>
+              </optgroup>
+              <optgroup label="Australia / Pacific">
+                <option value="Australia/Sydney">Sydney (AEST)</option>
+                <option value="Australia/Melbourne">Melbourne</option>
+                <option value="Australia/Perth">Perth</option>
+                <option value="Pacific/Auckland">Auckland (NZST)</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="UTC">UTC</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label">Time Format</label>
+            <div style="display:flex;gap:24px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
+                <input type="radio" name="clockFormat" id="clockFormat12" value="12" /> 12-hour &nbsp;<span style="color:rgba(255,255,255,0.35);">3:30 PM</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
+                <input type="radio" name="clockFormat" id="clockFormat24" value="24" /> 24-hour &nbsp;<span style="color:rgba(255,255,255,0.35);">15:30</span>
+              </label>
+            </div>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="clockPosition">Position on Screen</label>
+            <select class="admin-input" id="clockPosition" style="max-width:200px;">
+              <option value="top-left">Top Left</option>
+              <option value="top-center">Top Center</option>
+              <option value="top-right">Top Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="bottom-center">Bottom Center</option>
+              <option value="bottom-right">Bottom Right</option>
+            </select>
+          </div>
+          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
+        </div>
+
         <div class="card">
           <h3>Background Effect</h3>
           <div class="setting-row">

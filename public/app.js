@@ -1,32 +1,87 @@
 // ============================================================
 // State
 // ============================================================
-let selectedHost = '';
+let selectedHost   = '';
 let inactivityTimer = null;
 const INACTIVITY_MS = 120000; // 2 minutes
+
+// Clock state — populated from settings before startClock() runs
+const clockSettings = { timezone: 'America/New_York', format: '12', position: 'top-center' };
+let   timeServerOffset = 0; // ms difference between API server time and local Date.now()
 
 // ============================================================
 // Init
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadSettings();
+  await loadSettings(); // starts clock internally after syncing
   bindInactivity();
-  startClock();
 });
 
 // ============================================================
 // Clock
 // ============================================================
+
+// Fetch accurate time from time.now API and store the offset vs local clock
+async function syncTimeFromAPI(timezone) {
+  try {
+    const url = `https://time.now/developer/api/timezone/${timezone.replace('/', '/')}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const serverMs = new Date(data.datetime).getTime();
+    timeServerOffset = serverMs - Date.now();
+  } catch {
+    timeServerOffset = 0; // fall back to local clock silently
+  }
+}
+
+function applyClockPosition(position) {
+  const clock = document.querySelector('.kiosk-clock');
+  if (!clock) return;
+  clock.style.top       = '';
+  clock.style.bottom    = '';
+  clock.style.left      = '';
+  clock.style.right     = '';
+  clock.style.transform = '';
+  switch (position) {
+    case 'top-left':
+      clock.style.top  = '28px'; clock.style.left = '32px'; break;
+    case 'top-right':
+      clock.style.top  = '28px'; clock.style.right = '32px'; break;
+    case 'bottom-left':
+      clock.style.bottom = '28px'; clock.style.left = '32px'; break;
+    case 'bottom-center':
+      clock.style.bottom    = '28px';
+      clock.style.left      = '50%';
+      clock.style.transform = 'translateX(-50%)'; break;
+    case 'bottom-right':
+      clock.style.bottom = '28px'; clock.style.right = '32px'; break;
+    default: // top-center
+      clock.style.top       = '28px';
+      clock.style.left      = '50%';
+      clock.style.transform = 'translateX(-50%)';
+  }
+}
+
 function startClock() {
   function tick() {
-    const now  = new Date();
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const date = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    const now = new Date(Date.now() + timeServerOffset);
+    const tz  = clockSettings.timezone;
+    const h12 = clockSettings.format !== '24';
+
+    const time = now.toLocaleTimeString('en-US', {
+      timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: h12
+    });
+    const date = now.toLocaleDateString('en-US', {
+      timeZone: tz, weekday: 'long', month: 'long', day: 'numeric'
+    });
+
     document.getElementById('idleTime').textContent = time;
     document.getElementById('idleDate').textContent = date;
   }
   tick();
   setInterval(tick, 1000);
+  // Re-sync with API every 10 minutes to stay accurate
+  setInterval(() => syncTimeFromAPI(clockSettings.timezone), 10 * 60 * 1000);
 }
 
 // ============================================================
@@ -66,14 +121,23 @@ async function loadSettings() {
       document.getElementById('logoContainer').appendChild(img);
     }
 
+    // Clock settings
+    clockSettings.timezone = s.clockTimezone || 'America/New_York';
+    clockSettings.format   = s.clockFormat   || '12';
+    clockSettings.position = s.clockPosition || 'top-center';
+    applyClockPosition(clockSettings.position);
+
+    // Vanta background
     const effect  = s.vantaEffect || 'NET';
     const allOpts = s.vantaOptions ? JSON.parse(s.vantaOptions) : {};
-    const opts    = allOpts[effect] || VANTA_DEFAULTS[effect] || VANTA_DEFAULTS.NET;
-
-    await initVanta(effect, opts);
+    await initVanta(effect, allOpts[effect] || VANTA_DEFAULTS[effect] || VANTA_DEFAULTS.NET);
   } catch {
     document.getElementById('bgContainer').style.background = '#000000';
   }
+
+  // Always start the clock — sync first for accuracy, fall back to local if API unreachable
+  await syncTimeFromAPI(clockSettings.timezone);
+  startClock();
 }
 
 // ============================================================

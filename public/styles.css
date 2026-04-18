@@ -52,6 +52,7 @@ body {
    ============================================================ */
 .kiosk-clock {
   position: fixed;
+  /* top/left/right/bottom/transform set dynamically by applyClockPosition() */
   top: 28px;
   left: 50%;
   transform: translateX(-50%);

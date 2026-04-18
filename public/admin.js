@@ -549,6 +549,14 @@ async function loadAppearanceSettings() {
 
     document.getElementById('settingCompanyName').value = s.companyName || '';
 
+    // Clock settings
+    document.getElementById('clockTimezone').value = s.clockTimezone || 'America/New_York';
+    const fmt = s.clockFormat || '12';
+    const fmtEl = document.getElementById(`clockFormat${fmt}`);
+    if (fmtEl) fmtEl.checked = true;
+    document.getElementById('clockPosition').value = s.clockPosition || 'top-center';
+
+    // Vanta settings
     const effect = s.vantaEffect || 'NET';
     document.getElementById('settingVantaEffect').value = effect;
 
@@ -567,16 +575,22 @@ async function loadAppearanceSettings() {
 }
 
 async function saveSettings() {
-  const companyName  = document.getElementById('settingCompanyName').value.trim();
-  const vantaEffect  = document.getElementById('settingVantaEffect').value;
+  const companyName    = document.getElementById('settingCompanyName').value.trim();
+  const vantaEffect    = document.getElementById('settingVantaEffect').value;
+  const clockTimezone  = document.getElementById('clockTimezone').value;
+  const clockFormat    = document.querySelector('input[name="clockFormat"]:checked')?.value || '12';
+  const clockPosition  = document.getElementById('clockPosition').value;
 
-  // Collect current controls into vantaOptions
+  // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
 
   const res = await fetch('/api/admin/settings', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions) })
+    body:    JSON.stringify({
+      companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions),
+      clockTimezone, clockFormat, clockPosition
+    })
   });
 
   if (res.ok) showToast('Settings saved.');
