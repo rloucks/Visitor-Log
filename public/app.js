@@ -113,6 +113,15 @@ async function loadSettings() {
       document.getElementById('companyName').textContent = s.companyName;
     }
 
+    // Special message banner
+    const msgEl = document.getElementById('kioskMessage');
+    if (s.specialMessageEnabled === '1' && s.specialMessage?.trim()) {
+      msgEl.textContent = s.specialMessage.trim();
+      msgEl.classList.remove('hidden');
+    } else {
+      msgEl.classList.add('hidden');
+    }
+
     if (s.logoPath) {
       const img = document.createElement('img');
       img.src       = s.logoPath;
@@ -430,6 +439,7 @@ async function submitEventAction() {
       });
       if (!res.ok) throw new Error('Checkout failed');
       const data = await res.json();
+      document.getElementById('step3Title').textContent    = 'See you next time!';
       document.getElementById('successMessage').textContent =
         `Thanks ${selectedEventVisitor.firstName}! You were here for ${fmtEventStay(data.stayHours, data.stayMinutes)}.`;
     } else {
@@ -439,6 +449,7 @@ async function submitEventAction() {
         body:    JSON.stringify({ eventVisitorId: selectedEventVisitor.id })
       });
       if (!res.ok) throw new Error('Check-in failed');
+      document.getElementById('step3Title').textContent    = 'You\'re checked in!';
       document.getElementById('successMessage').textContent =
         `Welcome, ${selectedEventVisitor.firstName}! Enjoy the event.`;
     }
@@ -526,6 +537,7 @@ async function submitForm() {
 
     if (!res.ok) throw new Error('Check-in failed');
 
+    document.getElementById('step3Title').textContent     = 'You\'re checked in!';
     document.getElementById('successMessage').textContent =
       `${selectedHost} has been notified of your arrival.`;
 

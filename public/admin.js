@@ -600,6 +600,10 @@ async function loadAppearanceSettings() {
 
     document.getElementById('settingCompanyName').value = s.companyName || '';
 
+    // Special message
+    document.getElementById('specialMessageEnabled').checked = s.specialMessageEnabled === '1';
+    document.getElementById('specialMessage').value          = s.specialMessage || '';
+
     // Clock settings
     document.getElementById('clockTimezone').value = s.clockTimezone || 'America/New_York';
     const fmt = s.clockFormat || '12';
@@ -670,8 +674,10 @@ async function saveSettings() {
   const uiBgColor        = document.getElementById('uiBgColor').value;
   const uiFont           = document.getElementById('uiFont').value;
   const uiSurfaceOpacity = document.getElementById('uiSurfaceOpacity').value;
-  const fontWeightTitle  = document.getElementById('fontWeightTitle').value;
-  const fontWeightBody   = document.getElementById('fontWeightBody').value;
+  const fontWeightTitle      = document.getElementById('fontWeightTitle').value;
+  const fontWeightBody       = document.getElementById('fontWeightBody').value;
+  const specialMessageEnabled = document.getElementById('specialMessageEnabled').checked ? '1' : '0';
+  const specialMessage        = document.getElementById('specialMessage').value;
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -683,7 +689,8 @@ async function saveSettings() {
       companyName, vantaEffect, vantaOptions: JSON.stringify(vantaOptions),
       clockTimezone, clockFormat, clockPosition,
       uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity,
-      fontWeightTitle, fontWeightBody
+      fontWeightTitle, fontWeightBody,
+      specialMessageEnabled, specialMessage
     })
   });
 
@@ -737,23 +744,68 @@ async function loadEvents() {
     const res = await fetch('/api/admin/settings');
     const s   = await res.json();
     document.getElementById('eventModeEnabled').checked = s.eventMode === '1';
-    document.getElementById('eventName').value          = s.eventName || '';
+    document.getElementById('eventName').value          = s.eventName  || '';
+    document.getElementById('eventStart').value         = s.eventStart || '';
+    document.getElementById('eventEnd').value           = s.eventEnd   || '';
+    updateScheduleStatus(s.eventStart, s.eventEnd, s.eventMode === '1');
   } catch {
     showToast('Failed to load event settings.', 'error');
   }
   loadEventVisitors();
 }
 
+function updateScheduleStatus(start, end, manualOn) {
+  const el = document.getElementById('scheduleStatus');
+  if (!el) return;
+
+  if (manualOn) {
+    el.style.color = 'var(--success)';
+    el.textContent = '● Event mode is ON (manually enabled)';
+    return;
+  }
+  if (!start || !end) {
+    el.style.color = 'rgba(255,255,255,0.3)';
+    el.textContent = 'No schedule set — use the toggle to enable manually.';
+    return;
+  }
+  const now = new Date();
+  const s   = new Date(start);
+  const e   = new Date(end);
+  if (now < s) {
+    el.style.color = 'rgba(255,255,255,0.4)';
+    el.textContent = `Scheduled — starts ${s.toLocaleString()}`;
+  } else if (now > e) {
+    el.style.color = 'rgba(255,255,255,0.3)';
+    el.textContent = `Schedule ended ${e.toLocaleString()}`;
+  } else {
+    el.style.color = 'var(--success)';
+    el.textContent = `● Event mode is ON (scheduled until ${e.toLocaleString()})`;
+  }
+}
+
 async function saveEventSettings() {
-  const eventMode = document.getElementById('eventModeEnabled').checked ? '1' : '0';
-  const eventName = document.getElementById('eventName').value.trim();
+  const eventMode  = document.getElementById('eventModeEnabled').checked ? '1' : '0';
+  const eventName  = document.getElementById('eventName').value.trim();
+  const eventStart = document.getElementById('eventStart').value;
+  const eventEnd   = document.getElementById('eventEnd').value;
+
   const res = await fetch('/api/admin/settings', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ eventMode, eventName })
+    body:    JSON.stringify({ eventMode, eventName, eventStart, eventEnd })
   });
-  if (res.ok) showToast('Event settings saved.');
-  else        showToast('Failed to save.', 'error');
+  if (res.ok) {
+    showToast('Event settings saved.');
+    updateScheduleStatus(eventStart, eventEnd, eventMode === '1');
+  } else {
+    showToast('Failed to save.', 'error');
+  }
+}
+
+async function clearEventSchedule() {
+  document.getElementById('eventStart').value = '';
+  document.getElementById('eventEnd').value   = '';
+  await saveEventSettings();
 }
 
 async function loadEventVisitors() {

@@ -201,6 +201,29 @@
         </div>
 
         <div class="card">
+          <h3>Special Message</h3>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+            When enabled, a message banner appears at the bottom of the kiosk —
+            visible on the idle screen and during event check-in.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label">Enable</label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="specialMessageEnabled"
+                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show message on kiosk</span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="specialMessage">Message</label>
+            <textarea id="specialMessage" class="admin-input"
+              placeholder="e.g. Welcome! Please see the front desk after checking in."
+              style="max-width:440px;min-height:72px;resize:vertical;line-height:1.5;"></textarea>
+          </div>
+          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
+        </div>
+
+        <div class="card">
           <h3>Clock</h3>
           <div class="setting-row">
             <label class="setting-label" for="clockTimezone">Timezone</label>
@@ -431,6 +454,25 @@
             <input type="text" class="admin-input" id="eventName"
               placeholder="e.g. Company Gala 2026" style="max-width:320px;" />
           </div>
+          <div class="setting-row">
+            <label class="setting-label">Schedule</label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+              <div>
+                <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:4px;">Start</div>
+                <input type="datetime-local" class="admin-input" id="eventStart" style="max-width:220px;" />
+              </div>
+              <div>
+                <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:4px;">End</div>
+                <input type="datetime-local" class="admin-input" id="eventEnd" style="max-width:220px;" />
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="clearEventSchedule()"
+                style="margin-bottom:2px;">Clear</button>
+            </div>
+            <p style="font-size:0.78rem;color:rgba(255,255,255,0.3);margin-top:8px;">
+              Event mode activates automatically within this window. The toggle above overrides (forces on regardless of schedule).
+            </p>
+          </div>
+          <div id="scheduleStatus" style="font-size:0.82rem;margin-bottom:8px;"></div>
           <button class="btn btn-white" onclick="saveEventSettings()">Save Event Settings</button>
         </div>
 

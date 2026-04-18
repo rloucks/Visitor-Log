@@ -137,11 +137,14 @@
     </div>
   </div>
 
+  <!-- Persistent special message banner (shown when enabled) -->
+  <div id="kioskMessage" class="kiosk-message hidden"></div>
+
   <!-- Step 3: Success -->
   <div id="step3" class="screen">
     <div class="form-card success-card">
       <span class="checkmark">✓</span>
-      <h2>You're checked in!</h2>
+      <h2 id="step3Title">You're checked in!</h2>
       <p id="successMessage"></p>
       <div class="countdown-bar">
         <div id="countdownFill" class="countdown-fill"></div>

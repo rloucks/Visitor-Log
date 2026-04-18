@@ -86,6 +86,10 @@ const defaults = {
   fontWeightBody:   '400',
   eventMode:        '0',
   eventName:        'Event',
+  eventStart:       '',
+  eventEnd:         '',
+  specialMessageEnabled: '0',
+  specialMessage:        '',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

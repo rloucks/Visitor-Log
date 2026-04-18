@@ -82,7 +82,18 @@ router.post('/checkin', async (req, res) => {
 // Event mode — visitor list with live check-in status
 router.get('/event', (req, res) => {
   const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
-  if (getSetting('eventMode') !== '1') return res.json({ eventMode: false });
+
+  const manualOn   = getSetting('eventMode') === '1';
+  const eventStart = getSetting('eventStart');
+  const eventEnd   = getSetting('eventEnd');
+
+  let scheduledOn = false;
+  if (eventStart && eventEnd) {
+    const now = new Date();
+    scheduledOn = now >= new Date(eventStart) && now <= new Date(eventEnd);
+  }
+
+  if (!manualOn && !scheduledOn) return res.json({ eventMode: false });
 
   const eventName = getSetting('eventName') || 'Event';
   const visitors  = db.prepare('SELECT * FROM event_visitors ORDER BY lastName ASC, firstName ASC').all();
