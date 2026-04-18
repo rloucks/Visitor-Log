@@ -104,11 +104,9 @@ async function initVanta(effect, color1, color2, bgColor, speed) {
   if (!VANTA_PARAMS[key]) return;
 
   try {
-    if (!window.THREE) {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js');
-    }
+    // Three.js is pre-loaded in <head>; only load the Vanta effect script dynamically
     if (!window.VANTA?.[key]) {
-      await loadScript(`https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.${key.toLowerCase()}.min.js`);
+      await loadScript(`https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.${key.toLowerCase()}.min.js`);
     }
 
     if (window._vantaEffect) {
