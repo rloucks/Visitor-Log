@@ -634,31 +634,37 @@ function loadGoogleFont(fontName) {
 }
 
 function liveSpecialMessage() {
-  const enabled  = document.getElementById('specialMessageEnabled').checked;
-  const text     = document.getElementById('specialMessage').value.trim();
-  const color    = document.getElementById('specialMessageColor').value;
-  const bold     = document.getElementById('specialMessageBoldCheck').checked;
-  const size     = document.getElementById('specialMessageSize').value;
-  const position = document.getElementById('specialMessagePosition').value;
-  const align    = document.querySelector('input[name="specialMessageAlign"]:checked')?.value || 'center';
+  const enabled   = document.getElementById('specialMessageEnabled').checked;
+  const text      = document.getElementById('specialMessage').value.trim();
+  const color     = document.getElementById('specialMessageColor').value;
+  const bold      = document.getElementById('specialMessageBoldCheck').checked;
+  const size      = document.getElementById('specialMessageSize').value;
+  const position  = document.getElementById('specialMessagePosition').value;
+  const align     = document.querySelector('input[name="specialMessageAlign"]:checked')?.value || 'center';
+  const bgColor   = document.getElementById('specialMessageBgColor').value;
+  const bgOpacity = parseInt(document.getElementById('specialMessageBgOpacity').value, 10);
 
-  document.getElementById('specialMessageSizeLbl').textContent = parseFloat(size).toFixed(1);
+  document.getElementById('specialMessageSizeLbl').textContent    = parseFloat(size).toFixed(1);
+  document.getElementById('specialMessageBgOpacityLbl').textContent = `${bgOpacity}%`;
 
-  // Live-preview on the admin page itself (bottom of viewport)
+  const bg = hexToRgba(bgColor, bgOpacity / 100);
+
+  // Live-preview on the admin page itself
   let preview = document.getElementById('adminMsgPreview');
   if (!preview) {
     preview = document.createElement('div');
     preview.id = 'adminMsgPreview';
-    preview.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;padding:10px 32px;background:rgba(255,255,255,0.07);backdrop-filter:blur(16px);border-color:rgba(255,255,255,0.12);border-style:solid;pointer-events:none;';
+    preview.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;padding:10px 32px;backdrop-filter:blur(16px);border-color:rgba(255,255,255,0.12);border-style:solid;pointer-events:none;';
     document.body.appendChild(preview);
   }
 
   if (enabled && text) {
-    preview.textContent   = text;
+    preview.textContent      = text;
     preview.style.color      = color;
     preview.style.fontSize   = `${size}rem`;
     preview.style.fontWeight = bold ? '700' : '400';
     preview.style.textAlign  = align;
+    preview.style.background = bg;
     if (position === 'top') {
       preview.style.top = '0'; preview.style.bottom = '';
       preview.style.borderTopWidth = '0'; preview.style.borderBottomWidth = '1px';
@@ -696,18 +702,25 @@ async function loadAppearanceSettings() {
     document.getElementById('settingCompanyName').value = s.companyName || '';
 
     // Special message
-    document.getElementById('specialMessageEnabled').checked  = s.specialMessageEnabled === '1';
-    document.getElementById('specialMessage').value           = s.specialMessage || '';
-    document.getElementById('specialMessageColor').value      = s.specialMessageColor    || '#ffffff';
-    document.getElementById('specialMessageBoldCheck').checked = s.specialMessageBold === '1';
+    document.getElementById('specialMessageEnabled').checked   = s.specialMessageEnabled === '1';
+    document.getElementById('specialMessage').value            = s.specialMessage || '';
+    document.getElementById('specialMessageColor').value       = s.specialMessageColor    || '#ffffff';
+    document.getElementById('specialMessageBoldCheck').checked = s.specialMessageBold     === '1';
     const msgSize = s.specialMessageSize || '1';
-    document.getElementById('specialMessageSize').value       = msgSize;
+    document.getElementById('specialMessageSize').value        = msgSize;
     document.getElementById('specialMessageSizeLbl').textContent = parseFloat(msgSize).toFixed(1);
-    document.getElementById('specialMessagePosition').value   = s.specialMessagePosition || 'bottom';
+    document.getElementById('specialMessagePosition').value    = s.specialMessagePosition || 'bottom';
     const msgAlign = s.specialMessageAlign || 'center';
     const alignEl  = document.querySelector(`input[name="specialMessageAlign"][value="${msgAlign}"]`);
     if (alignEl) alignEl.checked = true;
+    document.getElementById('specialMessageBgColor').value     = s.specialMessageBgColor    || '#ffffff';
+    const bgOp = s.specialMessageBgOpacity || '7';
+    document.getElementById('specialMessageBgOpacity').value   = bgOp;
+    document.getElementById('specialMessageBgOpacityLbl').textContent = `${bgOp}%`;
     liveSpecialMessage();
+
+    // Clock visibility
+    document.getElementById('clockEnabled').checked = s.clockEnabled !== '0';
 
     // Clock settings
     document.getElementById('clockTimezone').value = s.clockTimezone || 'America/New_York';
@@ -788,6 +801,9 @@ async function saveSettings() {
   const specialMessageSize     = document.getElementById('specialMessageSize').value;
   const specialMessagePosition = document.getElementById('specialMessagePosition').value;
   const specialMessageAlign    = document.querySelector('input[name="specialMessageAlign"]:checked')?.value || 'center';
+  const specialMessageBgColor  = document.getElementById('specialMessageBgColor').value;
+  const specialMessageBgOpacity= document.getElementById('specialMessageBgOpacity').value;
+  const clockEnabled           = document.getElementById('clockEnabled').checked ? '1' : '0';
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -801,7 +817,8 @@ async function saveSettings() {
       uiAccentColor, uiTextColor, uiSurfaceColor, uiBgColor, uiFont, uiSurfaceOpacity,
       fontWeightTitle, fontWeightBody,
       specialMessageEnabled, specialMessage, specialMessageColor, specialMessageBold,
-      specialMessageSize, specialMessagePosition, specialMessageAlign
+      specialMessageSize, specialMessagePosition, specialMessageAlign,
+      specialMessageBgColor, specialMessageBgOpacity, clockEnabled
     })
   });
 

@@ -291,11 +291,37 @@
             </div>
           </div>
 
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:4px;align-items:flex-end;">
+            <div class="setting-row" style="margin:0;">
+              <label class="setting-label" for="specialMessageBgColor">Banner Background</label>
+              <input type="color" class="admin-input" id="specialMessageBgColor" value="#ffffff"
+                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                oninput="liveSpecialMessage()" />
+            </div>
+            <div class="setting-row" style="margin:0;flex:1;min-width:200px;">
+              <label class="setting-label" for="specialMessageBgOpacity">
+                Background Opacity: <span id="specialMessageBgOpacityLbl">7%</span>
+              </label>
+              <input type="range" class="admin-input" id="specialMessageBgOpacity"
+                min="0" max="100" step="1" value="7"
+                style="max-width:220px;padding:6px 0;cursor:pointer;"
+                oninput="liveSpecialMessage()" />
+            </div>
+          </div>
+
+          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:16px;">Save</button>
         </div>
 
         <div class="card">
           <h3>Clock</h3>
+          <div class="setting-row">
+            <label class="setting-label">Visibility</label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="clockEnabled" checked
+                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show clock on kiosk</span>
+            </label>
+          </div>
           <div class="setting-row">
             <label class="setting-label" for="clockTimezone">Timezone</label>
             <select class="admin-input" id="clockTimezone" style="max-width:280px;">

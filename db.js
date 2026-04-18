@@ -92,9 +92,12 @@ const defaults = {
   specialMessage:         '',
   specialMessageSize:     '1',
   specialMessageColor:    '#ffffff',
+  specialMessageBgColor:  '#ffffff',
+  specialMessageBgOpacity:'7',
   specialMessagePosition: 'bottom',
   specialMessageAlign:    'center',
   specialMessageBold:     '0',
+  clockEnabled:           '1',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

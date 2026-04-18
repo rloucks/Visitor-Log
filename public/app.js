@@ -114,17 +114,18 @@ async function loadSettings() {
     }
 
     // Special message banner
-    const msgEl = document.getElementById('kioskMessage');
-    if (s.specialMessageEnabled === '1' && s.specialMessage?.trim()) {
-      msgEl.textContent        = s.specialMessage.trim();
-      msgEl.style.color        = s.specialMessageColor    || '#ffffff';
-      msgEl.style.fontSize     = `${s.specialMessageSize  || '1'}rem`;
-      msgEl.style.fontWeight   = s.specialMessageBold === '1' ? '700' : '400';
-      msgEl.style.textAlign    = s.specialMessageAlign    || 'center';
-
-      const pos = s.specialMessagePosition || 'bottom';
+    const msgEl  = document.getElementById('kioskMessage');
+    const msgOn  = s.specialMessageEnabled === '1' && s.specialMessage?.trim();
+    const msgPos = s.specialMessagePosition || 'bottom';
+    if (msgOn) {
+      msgEl.textContent      = s.specialMessage.trim();
+      msgEl.style.color      = s.specialMessageColor    || '#ffffff';
+      msgEl.style.fontSize   = `${s.specialMessageSize  || '1'}rem`;
+      msgEl.style.fontWeight = s.specialMessageBold === '1' ? '700' : '400';
+      msgEl.style.textAlign  = s.specialMessageAlign    || 'center';
+      msgEl.style.background = hexToRgba(s.specialMessageBgColor || '#ffffff', (parseInt(s.specialMessageBgOpacity, 10) || 7) / 100);
       msgEl.classList.remove('msg-top', 'msg-bottom');
-      msgEl.classList.add(`msg-${pos}`);
+      msgEl.classList.add(`msg-${msgPos}`);
       msgEl.classList.remove('hidden');
     } else {
       msgEl.classList.add('hidden');
@@ -141,11 +142,25 @@ async function loadSettings() {
     // UI theme
     applyTheme(s);
 
+    // Clock visibility
+    const clockEl = document.querySelector('.kiosk-clock');
+    if (s.clockEnabled === '0') {
+      clockEl.classList.add('hidden');
+    } else {
+      clockEl.classList.remove('hidden');
+    }
+
     // Clock settings
     clockSettings.timezone = s.clockTimezone || 'America/New_York';
     clockSettings.format   = s.clockFormat   || '12';
     clockSettings.position = s.clockPosition || 'top-center';
-    applyClockPosition(clockSettings.position);
+
+    // If the special message banner is at the top, push a top-anchored clock to the bottom
+    let effectiveClockPos = clockSettings.position;
+    if (msgOn && msgPos === 'top' && effectiveClockPos.startsWith('top-')) {
+      effectiveClockPos = effectiveClockPos.replace('top-', 'bottom-');
+    }
+    applyClockPosition(effectiveClockPos);
 
     // Vanta background
     const effect  = s.vantaEffect || 'NET';

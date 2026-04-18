@@ -61,7 +61,7 @@ router.get('/me', (req, res) => {
 
 // --- Settings (semi-public — kiosk reads these for appearance) ---
 
-const PUBLIC_SETTINGS = ['companyName', 'logoPath', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName', 'eventStart', 'eventEnd', 'specialMessageEnabled', 'specialMessage', 'specialMessageSize', 'specialMessageColor', 'specialMessagePosition', 'specialMessageAlign', 'specialMessageBold'];
+const PUBLIC_SETTINGS = ['companyName', 'logoPath', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName', 'eventStart', 'eventEnd', 'specialMessageEnabled', 'specialMessage', 'specialMessageSize', 'specialMessageColor', 'specialMessageBgColor', 'specialMessageBgOpacity', 'specialMessagePosition', 'specialMessageAlign', 'specialMessageBold', 'clockEnabled'];
 
 router.get('/settings', (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
@@ -71,7 +71,7 @@ router.get('/settings', (req, res) => {
 });
 
 router.post('/settings', requireAuth, (req, res) => {
-  const allowed = ['companyName', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName', 'eventStart', 'eventEnd', 'specialMessageEnabled', 'specialMessage', 'specialMessageSize', 'specialMessageColor', 'specialMessagePosition', 'specialMessageAlign', 'specialMessageBold'];
+  const allowed = ['companyName', 'vantaEffect', 'vantaOptions', 'clockTimezone', 'clockFormat', 'clockPosition', 'uiAccentColor', 'uiTextColor', 'uiSurfaceColor', 'uiSurfaceOpacity', 'uiBgColor', 'uiFont', 'fontWeightTitle', 'fontWeightBody', 'eventMode', 'eventName', 'eventStart', 'eventEnd', 'specialMessageEnabled', 'specialMessage', 'specialMessageSize', 'specialMessageColor', 'specialMessageBgColor', 'specialMessageBgOpacity', 'specialMessagePosition', 'specialMessageAlign', 'specialMessageBold', 'clockEnabled'];
   const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
   for (const key of allowed) {
     if (req.body[key] !== undefined) stmt.run(key, req.body[key]);
