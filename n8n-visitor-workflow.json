@@ -2,37 +2,50 @@
   "name": "Visitor Check-In Notification",
   "nodes": [
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Setup Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60],
+      "parameters": {
+        "content": "## Visitor Check-In — Setup Checklist\n\n**1. Copy the webhook URL**\nActivate this workflow, then open the *Visitor Arrives* node and copy the Production URL. Paste it into the kiosk admin panel under **Integrations → n8n Webhook URL**.\n\n**2. Slack credential**\nOpen *DM the Host* and *Post to Channel* and select your Slack credential on each (OAuth2 or Bot Token).\n\n**3. Slack channel**\nIn *Post to Channel*, change `#front-desk` to whichever channel should receive all visitor notifications.\n\n**4. Google Calendar** *(optional)*\nOpen *Log to Calendar* and select your Google Calendar credential. Change `calendarId` from `primary` to whichever calendar should log visits.\nTo skip this, delete the *Log to Calendar* node and its connections.\n\n**5. Employee Slack User IDs**\nIn the kiosk admin panel under **Employees**, add each person's Slack User ID (e.g. `U0123ABCDEF`). The system will DM them directly when a visitor arrives.\n\n---\n**Incoming payload fields:**\n`firstName` · `lastName` · `company` · `host` · `hostSlackId`",
+        "height": 480,
+        "width": 420,
+        "color": 5
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Visitor Arrives",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "webhookId": "b2c3d4e5-0002-0002-0002-000000000002",
       "parameters": {
         "httpMethod": "POST",
         "path": "visitor-checkin",
         "responseMode": "responseNode",
         "options": {}
-      },
-      "id": "a1b2c3d4-0001-0001-0001-000000000001",
-      "name": "Visitor Check-In Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [200, 300],
-      "webhookId": "visitor-checkin"
+      }
     },
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Post to Channel",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [960, 180],
       "parameters": {
         "resource": "message",
         "operation": "post",
         "select": "channel",
         "channelId": {
           "__rl": true,
-          "value": "#security",
+          "value": "#front-desk",
           "mode": "name"
         },
-        "text": "=:wave: *Visitor Check-In*\n*{{ $('Visitor Check-In Webhook').item.json.firstName }} {{ $('Visitor Check-In Webhook').item.json.lastName }}*{{ $('Visitor Check-In Webhook').item.json.company ? ' from *' + $('Visitor Check-In Webhook').item.json.company + '*' : '' }} has arrived to see *{{ $('Visitor Check-In Webhook').item.json.host }}*.",
+        "text": "=:wave: *Visitor Check-In*\n*{{ $('Visitor Arrives').item.json.firstName }} {{ $('Visitor Arrives').item.json.lastName }}*{{ $('Visitor Arrives').item.json.company ? ' from *' + $('Visitor Arrives').item.json.company + '*' : '' }} has arrived to see *{{ $('Visitor Arrives').item.json.host }}*.",
         "otherOptions": {}
       },
-      "id": "a1b2c3d4-0001-0001-0001-000000000002",
-      "name": "Notify #security",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
-      "position": [440, 200],
       "credentials": {
         "slackApi": {
           "id": "",
@@ -41,6 +54,11 @@
       }
     },
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "Log to Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [960, 420],
       "parameters": {
         "resource": "event",
         "operation": "create",
@@ -53,15 +71,10 @@
         "start": "={{ $now.toISO() }}",
         "end": "={{ $now.plus({ minutes: 30 }).toISO() }}",
         "additionalFields": {
-          "summary": "=Visit: {{ $('Visitor Check-In Webhook').item.json.firstName }} {{ $('Visitor Check-In Webhook').item.json.lastName }} \u2192 {{ $('Visitor Check-In Webhook').item.json.host }}",
-          "description": "=Visitor: {{ $('Visitor Check-In Webhook').item.json.firstName }} {{ $('Visitor Check-In Webhook').item.json.lastName }}\nCompany: {{ $('Visitor Check-In Webhook').item.json.company || 'N/A' }}\nHost: {{ $('Visitor Check-In Webhook').item.json.host }}\nLogged by Visitor Check-In System"
+          "summary": "=Visit: {{ $('Visitor Arrives').item.json.firstName }} {{ $('Visitor Arrives').item.json.lastName }} → {{ $('Visitor Arrives').item.json.host }}",
+          "description": "=Visitor: {{ $('Visitor Arrives').item.json.firstName }} {{ $('Visitor Arrives').item.json.lastName }}\nCompany: {{ $('Visitor Arrives').item.json.company || 'N/A' }}\nHost: {{ $('Visitor Arrives').item.json.host }}\n\nLogged automatically by Visitor Check-In system."
         }
       },
-      "id": "a1b2c3d4-0001-0001-0001-000000000003",
-      "name": "Log to Google Calendar",
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.2,
-      "position": [440, 420],
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "",
@@ -70,6 +83,11 @@
       }
     },
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000005",
+      "name": "Has Host Slack ID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1200, 300],
       "parameters": {
         "conditions": {
           "options": {
@@ -79,43 +97,39 @@
           },
           "conditions": [
             {
-              "id": "cond-slack-id",
-              "leftValue": "={{ $('Visitor Check-In Webhook').item.json.hostSlackId }}",
+              "id": "cond-has-slack-id",
+              "leftValue": "={{ $('Visitor Arrives').item.json.hostSlackId }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "notEmpty"
+                "operation": "notEmpty",
+                "singleValue": true
               }
             }
           ],
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "a1b2c3d4-0001-0001-0001-000000000004",
-      "name": "Has Host Slack ID?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [680, 300]
+      }
     },
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000006",
+      "name": "DM the Host",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1440, 180],
       "parameters": {
         "resource": "message",
         "operation": "post",
         "select": "channel",
         "channelId": {
           "__rl": true,
-          "value": "={{ $('Visitor Check-In Webhook').item.json.hostSlackId }}",
+          "value": "={{ $('Visitor Arrives').item.json.hostSlackId }}",
           "mode": "id"
         },
-        "text": "=:wave: Hi *{{ $('Visitor Check-In Webhook').item.json.host }}*, *{{ $('Visitor Check-In Webhook').item.json.firstName }} {{ $('Visitor Check-In Webhook').item.json.lastName }}*{{ $('Visitor Check-In Webhook').item.json.company ? ' from *' + $('Visitor Check-In Webhook').item.json.company + '*' : '' }} is here to see you at the front desk.",
+        "text": "=:wave: Hi *{{ $('Visitor Arrives').item.json.host }}* — *{{ $('Visitor Arrives').item.json.firstName }} {{ $('Visitor Arrives').item.json.lastName }}*{{ $('Visitor Arrives').item.json.company ? ' from *' + $('Visitor Arrives').item.json.company + '*' : '' }} is at the front desk to see you.",
         "otherOptions": {}
       },
-      "id": "a1b2c3d4-0001-0001-0001-000000000005",
-      "name": "DM Host",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
-      "position": [920, 200],
       "credentials": {
         "slackApi": {
           "id": "",
@@ -124,97 +138,57 @@
       }
     },
     {
+      "id": "a1b2c3d4-0001-0001-0001-000000000007",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1680, 300],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={ \"success\": true }",
         "options": {
           "responseCode": 200
         }
-      },
-      "id": "a1b2c3d4-0001-0001-0001-000000000006",
-      "name": "Respond 200",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [1160, 300]
-    },
-    {
-      "parameters": {
-        "content": "## Visitor Check-In Notification\n\n**Triggered by:** POST from the Node.js kiosk server\n\n**Flow:**\n1. Webhook receives visitor data\n2. Posts to #security Slack channel *(always)*\n3. Logs a 30-min event to Google Calendar *(always)*\n4. If the host has a Slack User ID configured → sends them a DM\n5. Returns `{ success: true }` to the kiosk\n\n**Before activating:**\n- Set the Slack credential on both Slack nodes\n- Set the Google Calendar credential\n- Change `calendarId` on the Calendar node to your \"Visitors\" calendar\n- Set `N8N_WEBHOOK_URL` in the kiosk app `.env` to:\n  `https://n8n.anvil.ai/webhook/visitor-checkin`\n- Employee Slack User IDs are entered per-employee in the Admin Panel → Employees section",
-        "height": 400,
-        "width": 340
-      },
-      "id": "a1b2c3d4-0001-0001-0001-000000000007",
-      "name": "Setup Notes",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [200, 560]
+      }
     }
   ],
   "connections": {
-    "Visitor Check-In Webhook": {
+    "Visitor Arrives": {
       "main": [
         [
-          {
-            "node": "Notify #security",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Log to Google Calendar",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Post to Channel",   "type": "main", "index": 0 },
+          { "node": "Log to Calendar",   "type": "main", "index": 0 }
         ]
       ]
     },
-    "Notify #security": {
+    "Post to Channel": {
       "main": [
         [
-          {
-            "node": "Has Host Slack ID?",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Has Host Slack ID?", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Log to Google Calendar": {
+    "Log to Calendar": {
       "main": [
         [
-          {
-            "node": "Has Host Slack ID?",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Has Host Slack ID?", "type": "main", "index": 0 }
         ]
       ]
     },
     "Has Host Slack ID?": {
       "main": [
         [
-          {
-            "node": "DM Host",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "DM the Host", "type": "main", "index": 0 }
         ],
         [
-          {
-            "node": "Respond 200",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Respond OK",  "type": "main", "index": 0 }
         ]
       ]
     },
-    "DM Host": {
+    "DM the Host": {
       "main": [
         [
-          {
-            "node": "Respond 200",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Respond OK", "type": "main", "index": 0 }
         ]
       ]
     }
