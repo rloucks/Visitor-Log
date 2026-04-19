@@ -32,9 +32,6 @@ html, body {
   font-family: var(--font-family);
   font-weight: var(--font-weight-body);
   -webkit-font-smoothing: antialiased;
-  /* Extend content under the iOS status bar (black-translucent) */
-  padding-top: env(safe-area-inset-top);
-  padding-top: constant(safe-area-inset-top); /* Safari <11.2 fallback */
 }
 
 /* Default body: kiosk (no scroll, fullscreen) */
