@@ -688,6 +688,64 @@ const EFFECT_CONTROLS = {
   NONE: [
     { key: 'backgroundColor', label: 'Background Color',     type: 'color', def: '#000000' },
   ],
+  // Gradients
+  GRADIENT: [
+    { key: 'color1', label: 'Color 1',                type: 'color', def: '#1a1a2e' },
+    { key: 'color2', label: 'Color 2',                type: 'color', def: '#0f3460' },
+    { key: 'color3', label: 'Color 3 (optional)',     type: 'color', def: '#16213e' },
+    { key: 'angle',  label: 'Angle',                  type: 'range', min: 0, max: 360, step: 15, def: 135 },
+  ],
+  GRADIENT_MOVE: [
+    { key: 'color1', label: 'Color 1',                type: 'color', def: '#1a1a2e' },
+    { key: 'color2', label: 'Color 2',                type: 'color', def: '#0f3460' },
+    { key: 'color3', label: 'Color 3',                type: 'color', def: '#e94560' },
+    { key: 'speed',  label: 'Cycle (seconds)',        type: 'range', min: 3, max: 30, step: 1, def: 8 },
+  ],
+  // Custom media
+  IMAGE: [
+    { key: 'imageUrl',        label: 'Image URL',           type: 'text',   def: '', placeholder: 'https://example.com/photo.jpg' },
+    { key: 'fit',             label: 'Fit Mode',            type: 'select', options: [['cover','Cover (fill)'],['contain','Contain (letterbox)'],['fill','Stretch']], def: 'cover' },
+    { key: 'backgroundColor', label: 'Fallback Color',      type: 'color',  def: '#000000' },
+    { key: 'overlayOpacity',  label: 'Dark Overlay',        type: 'range',  min: 0, max: 80, step: 5, def: 0 },
+  ],
+  VIDEO: [
+    { key: 'videoUrl',        label: 'Video URL',           type: 'text',   def: '', placeholder: 'https://example.com/loop.mp4' },
+    { key: 'backgroundColor', label: 'Fallback Color',      type: 'color',  def: '#000000' },
+    { key: 'opacity',         label: 'Opacity',             type: 'range',  min: 0.1, max: 1, step: 0.1, def: 1 },
+  ],
+  // Seasonal
+  SNOW: [
+    { key: 'backgroundColor', label: 'Sky Color',           type: 'color', def: '#000011' },
+    { key: 'color',            label: 'Snowflake Color',     type: 'color', def: '#ffffff' },
+    { key: 'count',            label: 'Density',             type: 'range', min: 20,  max: 200, step: 10,  def: 80 },
+    { key: 'speed',            label: 'Fall Speed',          type: 'range', min: 0.5, max: 5,   step: 0.5, def: 1.5 },
+    { key: 'size',             label: 'Flake Size',          type: 'range', min: 2,   max: 10,  step: 1,   def: 5 },
+  ],
+  LEAVES: [
+    { key: 'backgroundColor', label: 'Background',          type: 'color', def: '#1a0a00' },
+    { key: 'count',            label: 'Density',             type: 'range', min: 10,  max: 100, step: 5,   def: 40 },
+    { key: 'speed',            label: 'Fall Speed',          type: 'range', min: 0.5, max: 4,   step: 0.5, def: 1 },
+    { key: 'wind',             label: 'Wind',                type: 'range', min: 0,   max: 3,   step: 0.5, def: 1 },
+  ],
+  RAIN: [
+    { key: 'backgroundColor', label: 'Background',          type: 'color', def: '#050510' },
+    { key: 'color',            label: 'Rain Color',          type: 'color', def: '#4488aa' },
+    { key: 'count',            label: 'Intensity',           type: 'range', min: 50,  max: 500, step: 25,  def: 150 },
+    { key: 'speed',            label: 'Speed',               type: 'range', min: 5,   max: 30,  step: 1,   def: 15 },
+    { key: 'wind',             label: 'Wind Angle °',        type: 'range', min: -30, max: 30,  step: 5,   def: 10 },
+  ],
+  SAKURA: [
+    { key: 'backgroundColor', label: 'Background',          type: 'color', def: '#0d0010' },
+    { key: 'count',            label: 'Density',             type: 'range', min: 10,  max: 80, step: 5,   def: 30 },
+    { key: 'speed',            label: 'Fall Speed',          type: 'range', min: 0.3, max: 3,  step: 0.3, def: 0.8 },
+    { key: 'wind',             label: 'Drift',               type: 'range', min: 0,   max: 3,  step: 0.5, def: 1.5 },
+  ],
+  FIREFLIES: [
+    { key: 'backgroundColor', label: 'Background',          type: 'color', def: '#001005' },
+    { key: 'color',            label: 'Glow Color',          type: 'color', def: '#aaff44' },
+    { key: 'count',            label: 'Count',               type: 'range', min: 10,  max: 100, step: 5,   def: 40 },
+    { key: 'speed',            label: 'Speed',               type: 'range', min: 0.3, max: 3,   step: 0.3, def: 0.8 },
+  ],
 };
 
 // Holds per-effect settings loaded from server; updated on save
@@ -715,6 +773,25 @@ function renderEffectControls(effect) {
           <label class="setting-label" for="${id}">${esc(c.label)}</label>
           <input type="color" class="admin-input" id="${id}" value="${val}"
             style="max-width:60px;height:36px;padding:2px;cursor:pointer;" />
+        </div>`;
+    }
+    if (c.type === 'text') {
+      return `
+        <div class="setting-row">
+          <label class="setting-label" for="${id}">${esc(c.label)}</label>
+          <input type="text" class="admin-input" id="${id}" value="${esc(String(val))}"
+            placeholder="${esc(c.placeholder || '')}" style="max-width:420px;" />
+        </div>`;
+    }
+    if (c.type === 'select') {
+      const optHtml = c.options.map(o => {
+        const [v, l] = Array.isArray(o) ? o : [o, o];
+        return `<option value="${esc(v)}"${String(val) === v ? ' selected' : ''}>${esc(l)}</option>`;
+      }).join('');
+      return `
+        <div class="setting-row">
+          <label class="setting-label" for="${id}">${esc(c.label)}</label>
+          <select class="admin-input" id="${id}" style="max-width:260px;">${optHtml}</select>
         </div>`;
     }
     return `

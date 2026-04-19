@@ -91,18 +91,31 @@ function startClock() {
 
 // Fallback defaults used when no saved options exist for an effect
 const VANTA_DEFAULTS = {
-  NET:    { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },
-  DOTS:   { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 3, spacing: 35, speed: 1.5 },
-  WAVES:  { color: '#1a3a6b', backgroundColor: '#000000', waveHeight: 20, waveSpeed: 1, shininess: 30, zoom: 1 },
-  BIRDS:  { color1: '#ff6600', color2: '#0066ff', backgroundColor: '#000000', quantity: 3, birdSize: 1.5, speedLimit: 5, separation: 20 },
-  RINGS:  { color: '#ffffff', backgroundColor: '#000000', backgroundAlpha: 1, amplitudeFactor: 1, size: 1, speed: 1 },
-  CELLS:  { color1: '#ffffff', color2: '#888888', color3: '#444444', backgroundColor: '#000000', size: 1.5, speed: 1.5 },
-  FOG:    { highlightColor: '#ff6633', midtoneColor: '#222244', lowlightColor: '#000011', backgroundColor: '#000000', blurFactor: 0.6, speed: 1.5, zoom: 1 },
-  GLOBE:  { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 1, speed: 1 },
-  HALO:   { baseColor: '#0066ff', backgroundColor: '#000000', amplitudeFactor: 1, size: 1.5, xOffset: 0, yOffset: 0 },
-  RIPPLE: { color: '#0044ff', backgroundColor: '#000000', waveHeight: 30, waveSpeed: 1, zoom: 1 },
-  CLOUDS: { backgroundColor: '#111111', skyColor: '#68b8d7', cloudColor: '#adc4c8', cloudShadowColor: '#183550', sunColor: '#ff9919', speed: 1 },
-  NONE:   { backgroundColor: '#000000' },
+  // Vanta 3D
+  NET:           { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },
+  DOTS:          { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 3, spacing: 35, speed: 1.5 },
+  WAVES:         { color: '#1a3a6b', backgroundColor: '#000000', waveHeight: 20, waveSpeed: 1, shininess: 30, zoom: 1 },
+  BIRDS:         { color1: '#ff6600', color2: '#0066ff', backgroundColor: '#000000', quantity: 3, birdSize: 1.5, speedLimit: 5, separation: 20 },
+  RINGS:         { color: '#ffffff', backgroundColor: '#000000', backgroundAlpha: 1, amplitudeFactor: 1, size: 1, speed: 1 },
+  CELLS:         { color1: '#ffffff', color2: '#888888', color3: '#444444', backgroundColor: '#000000', size: 1.5, speed: 1.5 },
+  FOG:           { highlightColor: '#ff6633', midtoneColor: '#222244', lowlightColor: '#000011', backgroundColor: '#000000', blurFactor: 0.6, speed: 1.5, zoom: 1 },
+  GLOBE:         { color: '#ffffff', color2: '#444444', backgroundColor: '#000000', size: 1, speed: 1 },
+  HALO:          { baseColor: '#0066ff', backgroundColor: '#000000', amplitudeFactor: 1, size: 1.5, xOffset: 0, yOffset: 0 },
+  RIPPLE:        { color: '#0044ff', backgroundColor: '#000000', waveHeight: 30, waveSpeed: 1, zoom: 1 },
+  CLOUDS:        { backgroundColor: '#111111', skyColor: '#68b8d7', cloudColor: '#adc4c8', cloudShadowColor: '#183550', sunColor: '#ff9919', speed: 1 },
+  NONE:          { backgroundColor: '#000000' },
+  // Gradients
+  GRADIENT:      { color1: '#1a1a2e', color2: '#0f3460', color3: '#16213e', angle: 135 },
+  GRADIENT_MOVE: { color1: '#1a1a2e', color2: '#0f3460', color3: '#e94560', speed: 8 },
+  // Custom media
+  IMAGE:         { imageUrl: '', fit: 'cover', backgroundColor: '#000000', overlayOpacity: 0 },
+  VIDEO:         { videoUrl: '', backgroundColor: '#000000', opacity: 1 },
+  // Seasonal
+  SNOW:          { backgroundColor: '#000011', color: '#ffffff', count: 80, speed: 1.5, size: 5 },
+  LEAVES:        { backgroundColor: '#1a0a00', count: 40, speed: 1, wind: 1 },
+  RAIN:          { backgroundColor: '#050510', color: '#4488aa', count: 150, speed: 15, wind: 10 },
+  SAKURA:        { backgroundColor: '#0d0010', count: 30, speed: 0.8, wind: 1.5 },
+  FIREFLIES:     { backgroundColor: '#001005', color: '#aaff44', count: 40, speed: 0.8 },
 };
 
 async function loadSettings() {
@@ -169,7 +182,7 @@ async function loadSettings() {
     // Vanta background
     const effect  = s.vantaEffect || 'NET';
     const allOpts = s.vantaOptions ? JSON.parse(s.vantaOptions) : {};
-    await initVanta(effect, allOpts[effect] || VANTA_DEFAULTS[effect] || VANTA_DEFAULTS.NET);
+    await initVanta(effect, allOpts[effect] || VANTA_DEFAULTS[effect] || {});
   } catch {
     document.getElementById('bgContainer').style.background = '#000000';
   }
@@ -214,14 +227,13 @@ function applyTheme(s) {
 }
 
 // ============================================================
-// Vanta Background
+// Background — Vanta, Gradients, Canvas Particles, Media
 // ============================================================
 
 function hexToInt(hex) {
   return parseInt((hex || '#000000').replace('#', ''), 16);
 }
 
-// Convert any hex string values in an options object to integers for Vanta
 function processVantaOpts(opts) {
   const hexRe = /^#[0-9a-fA-F]{6}$/;
   const out   = {};
@@ -242,22 +254,121 @@ function loadScript(src) {
   });
 }
 
+// Holds cleanup function for non-Vanta effects
+let _customBg = null;
+
+// Create a full-screen canvas inside container; returns { canvas, ctx, cleanup }
+function _makeCanvas(container) {
+  const c = document.createElement('canvas');
+  c.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+  c.width = innerWidth; c.height = innerHeight;
+  container.appendChild(c);
+  const onResize = () => { c.width = innerWidth; c.height = innerHeight; };
+  window.addEventListener('resize', onResize);
+  return {
+    canvas: c,
+    ctx: c.getContext('2d'),
+    cleanup: () => { window.removeEventListener('resize', onResize); c.remove(); },
+  };
+}
+
+// Simple rAF loop; returns a stop() function
+function _raf(tick) {
+  let id;
+  (function run() { tick(); id = requestAnimationFrame(run); })();
+  return () => cancelAnimationFrame(id);
+}
+
 async function initVanta(effect, opts) {
   const container = document.getElementById('bgContainer');
+
+  // Tear down previous effect
+  try { window._vantaEffect?.destroy(); } catch {}
+  window._vantaEffect = null;
+  if (_customBg) { _customBg(); _customBg = null; }
+  container.innerHTML = '';
+  for (const p of ['background','backgroundImage','backgroundSize','backgroundPosition',
+                    'backgroundRepeat','animation','opacity']) {
+    container.style[p] = '';
+  }
+
+  const key = (effect || 'NONE').toUpperCase();
+
+  // ── None ────────────────────────────────────────────────────
+  if (key === 'NONE') {
+    container.style.background = opts.backgroundColor || '#000000';
+    return;
+  }
+
+  // ── Static image ────────────────────────────────────────────
+  if (key === 'IMAGE') {
+    container.style.background = opts.backgroundColor || '#000000';
+    if (opts.imageUrl) {
+      container.style.backgroundImage  = `url('${opts.imageUrl}')`;
+      container.style.backgroundSize   = opts.fit || 'cover';
+      container.style.backgroundPosition = 'center center';
+      container.style.backgroundRepeat  = 'no-repeat';
+    }
+    if (+opts.overlayOpacity > 0) {
+      const ov = document.createElement('div');
+      ov.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,${+opts.overlayOpacity/100});pointer-events:none;`;
+      container.appendChild(ov);
+    }
+    return;
+  }
+
+  // ── Video loop ───────────────────────────────────────────────
+  if (key === 'VIDEO') {
+    container.style.background = opts.backgroundColor || '#000000';
+    if (opts.videoUrl) {
+      const vid = document.createElement('video');
+      vid.src         = opts.videoUrl;
+      vid.autoplay    = true;
+      vid.loop        = true;
+      vid.muted       = true;
+      vid.playsInline = true;
+      vid.style.cssText = `position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:${opts.opacity ?? 1};`;
+      container.appendChild(vid);
+      vid.play().catch(() => {});
+      _customBg = () => { vid.pause(); vid.src = ''; };
+    }
+    return;
+  }
+
+  // ── Static gradient ──────────────────────────────────────────
+  if (key === 'GRADIENT') {
+    const stops = [opts.color1 || '#1a1a2e', opts.color2 || '#0f3460'];
+    if (opts.color3) stops.push(opts.color3);
+    container.style.background = `linear-gradient(${opts.angle ?? 135}deg, ${stops.join(', ')})`;
+    return;
+  }
+
+  // ── Animated gradient ────────────────────────────────────────
+  if (key === 'GRADIENT_MOVE') {
+    const c1 = opts.color1 || '#1a1a2e';
+    const c2 = opts.color2 || '#0f3460';
+    const c3 = opts.color3 || '#e94560';
+    container.style.background     = `linear-gradient(-45deg, ${c1}, ${c2}, ${c3}, ${c1})`;
+    container.style.backgroundSize = '400% 400%';
+    container.style.animation      = `kiosk-gradient-move ${opts.speed ?? 8}s ease infinite`;
+    return;
+  }
+
+  // ── Canvas / seasonal effects ────────────────────────────────
+  const canvasEffects = { SNOW: _runSnow, LEAVES: _runLeaves, RAIN: _runRain,
+                          SAKURA: _runSakura, FIREFLIES: _runFireflies };
+  if (canvasEffects[key]) {
+    container.style.background = opts.backgroundColor || '#000000';
+    _customBg = canvasEffects[key](container, opts);
+    return;
+  }
+
+  // ── Vanta 3D effects ─────────────────────────────────────────
   container.style.background = opts.backgroundColor || '#000000';
-
-  if (!effect || effect === 'NONE') return;
-
-  const key = effect.toUpperCase();
-
   try {
     if (!window.VANTA?.[key]) {
       await loadScript(`https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.${key.toLowerCase()}.min.js`);
     }
-
-    try { window._vantaEffect?.destroy(); } catch {}
-    window._vantaEffect = null;
-
     window._vantaEffect = window.VANTA[key]({
       THREE,
       el:            container,
@@ -266,11 +377,196 @@ async function initVanta(effect, opts) {
       gyroControls:  false,
       minHeight:     window.innerHeight,
       minWidth:      window.innerWidth,
-      ...processVantaOpts(opts)
+      ...processVantaOpts(opts),
     });
   } catch (err) {
     console.warn('Vanta init failed:', err.message);
   }
+}
+
+// ── Snow ─────────────────────────────────────────────────────
+function _runSnow(container, opts) {
+  const { canvas, ctx, cleanup } = _makeCanvas(container);
+  const count   = +opts.count || 80;
+  const speed   = +opts.speed || 1.5;
+  const maxSize = +opts.size  || 5;
+  const color   = opts.color  || '#ffffff';
+  const flakes  = Array.from({ length: count }, () => ({
+    x:         Math.random() * canvas.width,
+    y:         Math.random() * canvas.height,
+    r:         Math.random() * maxSize + 1,
+    vy:        (Math.random() * 0.5 + 0.5) * speed,
+    sway:      Math.random() * Math.PI * 2,
+    swaySpeed: Math.random() * 0.02 + 0.005,
+    alpha:     Math.random() * 0.5 + 0.5,
+  }));
+  const stop = _raf(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = color;
+    for (const f of flakes) {
+      f.sway += f.swaySpeed;
+      f.x    += Math.sin(f.sway) * 0.5;
+      f.y    += f.vy;
+      if (f.y > canvas.height + f.r) { f.y = -f.r; f.x = Math.random() * canvas.width; }
+      if (f.x < -f.r) f.x = canvas.width + f.r;
+      if (f.x > canvas.width + f.r) f.x = -f.r;
+      ctx.globalAlpha = f.alpha;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
+  return () => { stop(); cleanup(); };
+}
+
+// ── Autumn leaves ────────────────────────────────────────────
+function _runLeaves(container, opts) {
+  const { canvas, ctx, cleanup } = _makeCanvas(container);
+  const count  = +opts.count || 40;
+  const speed  = +opts.speed || 1;
+  const wind   = +opts.wind  || 1;
+  const colors = ['#c0392b','#e67e22','#f39c12','#d4ac0d','#a04000','#8b4513'];
+  function mkLeaf() {
+    return {
+      x: Math.random() * canvas.width, y: -20,
+      r: Math.random() * 12 + 8,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.05,
+      vx: (Math.random() - 0.3) * wind * 1.5,
+      vy: (Math.random() * 0.5 + 0.5) * speed * 1.2,
+      sway: Math.random() * Math.PI * 2,
+      swaySpeed: Math.random() * 0.015 + 0.005,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: Math.random() * 0.4 + 0.6,
+    };
+  }
+  const leaves = Array.from({ length: count }, () => { const l = mkLeaf(); l.y = Math.random() * canvas.height; return l; });
+  const stop = _raf(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const l of leaves) {
+      l.sway += l.swaySpeed; l.x += l.vx + Math.sin(l.sway) * wind * 0.8; l.y += l.vy; l.angle += l.spin;
+      if (l.y > canvas.height + 20) Object.assign(l, mkLeaf());
+      ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(l.angle);
+      ctx.globalAlpha = l.alpha; ctx.fillStyle = l.color;
+      const s = l.r;
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.bezierCurveTo(s * 0.8, -s * 0.4, s * 0.8, s * 0.4, 0, s);
+      ctx.bezierCurveTo(-s * 0.8, s * 0.4, -s * 0.8, -s * 0.4, 0, -s);
+      ctx.fill(); ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  });
+  return () => { stop(); cleanup(); };
+}
+
+// ── Rain ─────────────────────────────────────────────────────
+function _runRain(container, opts) {
+  const { canvas, ctx, cleanup } = _makeCanvas(container);
+  const count   = +opts.count || 150;
+  const speed   = +opts.speed || 15;
+  const windDeg = +opts.wind  || 10;
+  const color   = opts.color  || '#4488aa';
+  const windRad = windDeg * Math.PI / 180;
+  const vx = Math.sin(windRad) * speed;
+  const vy = Math.cos(windRad) * speed;
+  const lenFactor = 0.07;
+  const drops = Array.from({ length: count }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    alpha: Math.random() * 0.4 + 0.15,
+  }));
+  const stop = _raf(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    for (const d of drops) {
+      ctx.globalAlpha = d.alpha;
+      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - vx * lenFactor * speed, d.y - vy * lenFactor * speed); ctx.stroke();
+      d.x += vx; d.y += vy;
+      if (d.y > canvas.height + 10) { d.y = -10; d.x = Math.random() * (canvas.width + 100) - 50; }
+      if (d.x > canvas.width + 10) d.x = -10;
+      if (d.x < -10) d.x = canvas.width + 10;
+    }
+    ctx.globalAlpha = 1;
+  });
+  return () => { stop(); cleanup(); };
+}
+
+// ── Cherry blossoms ──────────────────────────────────────────
+function _runSakura(container, opts) {
+  const { canvas, ctx, cleanup } = _makeCanvas(container);
+  const count = +opts.count || 30;
+  const speed = +opts.speed || 0.8;
+  const drift = +opts.wind  || 1.5;
+  function mkPetal() {
+    return {
+      x: Math.random() * canvas.width, y: -10,
+      r: Math.random() * 6 + 4,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.03,
+      vx: (Math.random() - 0.5) * drift * 2,
+      vy: (Math.random() * 0.4 + 0.3) * speed,
+      sway: Math.random() * Math.PI * 2,
+      swaySpeed: Math.random() * 0.02 + 0.005,
+      hue: 330 + Math.random() * 20,
+      sat: 60 + Math.random() * 30,
+      lit: 80 + Math.random() * 15,
+      alpha: Math.random() * 0.5 + 0.5,
+    };
+  }
+  const petals = Array.from({ length: count }, () => { const p = mkPetal(); p.y = Math.random() * canvas.height; return p; });
+  const stop = _raf(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of petals) {
+      p.sway += p.swaySpeed; p.x += p.vx + Math.sin(p.sway) * drift * 0.5; p.y += p.vy; p.angle += p.spin;
+      if (p.y > canvas.height + 20) Object.assign(p, mkPetal());
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = `hsl(${p.hue},${p.sat}%,${p.lit}%)`;
+      ctx.beginPath(); ctx.ellipse(0, -p.r * 0.5, p.r * 0.5, p.r, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  });
+  return () => { stop(); cleanup(); };
+}
+
+// ── Fireflies ────────────────────────────────────────────────
+function _runFireflies(container, opts) {
+  const { canvas, ctx, cleanup } = _makeCanvas(container);
+  const count = +opts.count || 40;
+  const speed = +opts.speed || 0.8;
+  const color = opts.color  || '#aaff44';
+  const cr = parseInt(color.slice(1, 3), 16);
+  const cg = parseInt(color.slice(3, 5), 16);
+  const cb = parseInt(color.slice(5, 7), 16);
+  const flies = Array.from({ length: count }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * speed,
+    vy: (Math.random() - 0.5) * speed,
+    phase: Math.random() * Math.PI * 2,
+    pulseSpeed: Math.random() * 0.03 + 0.01,
+    r: Math.random() * 2.5 + 1,
+  }));
+  const stop = _raf(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const f of flies) {
+      f.phase += f.pulseSpeed;
+      f.x += f.vx + (Math.random() - 0.5) * 0.3;
+      f.y += f.vy + (Math.random() - 0.5) * 0.3;
+      if (f.x < 0) f.x = canvas.width; if (f.x > canvas.width) f.x = 0;
+      if (f.y < 0) f.y = canvas.height; if (f.y > canvas.height) f.y = 0;
+      const pulse = (Math.sin(f.phase) + 1) / 2;
+      const alpha = 0.3 + pulse * 0.7;
+      const gr = f.r * (1 + pulse * 2);
+      const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, gr * 4);
+      grad.addColorStop(0, `rgba(${cr},${cg},${cb},${alpha})`);
+      grad.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(f.x, f.y, gr * 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+  return () => { stop(); cleanup(); };
 }
 
 // ============================================================

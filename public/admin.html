@@ -363,19 +363,38 @@
               <div class="settings-subsection-label" style="margin-top:24px;">Background Effect</div>
               <div class="setting-row">
                 <label class="setting-label" for="settingVantaEffect">Effect</label>
-                <select class="admin-input" id="settingVantaEffect" onchange="onEffectChange()" style="max-width:260px;">
-                  <option value="NET">Net — Connected nodes</option>
-                  <option value="DOTS">Dots — Particle field</option>
-                  <option value="WAVES">Waves — Ocean surface</option>
-                  <option value="BIRDS">Birds — Flocking swarm</option>
-                  <option value="RINGS">Rings — Pulsing circles</option>
-                  <option value="CELLS">Cells — Organic mesh</option>
-                  <option value="FOG">Fog — Volumetric haze</option>
-                  <option value="GLOBE">Globe — Spinning sphere</option>
-                  <option value="HALO">Halo — Glowing ring</option>
-                  <option value="RIPPLE">Ripple — Water surface</option>
-                  <option value="CLOUDS">Clouds — Sky scene</option>
-                  <option value="NONE">None — Solid color</option>
+                <select class="admin-input" id="settingVantaEffect" onchange="onEffectChange()" style="max-width:280px;">
+                  <optgroup label="Animated 3D">
+                    <option value="NET">Net — Connected nodes</option>
+                    <option value="DOTS">Dots — Particle field</option>
+                    <option value="WAVES">Waves — Ocean surface</option>
+                    <option value="BIRDS">Birds — Flocking swarm</option>
+                    <option value="RINGS">Rings — Pulsing circles</option>
+                    <option value="CELLS">Cells — Organic mesh</option>
+                    <option value="FOG">Fog — Volumetric haze</option>
+                    <option value="GLOBE">Globe — Spinning sphere</option>
+                    <option value="HALO">Halo — Glowing ring</option>
+                    <option value="RIPPLE">Ripple — Water surface</option>
+                    <option value="CLOUDS">Clouds — Sky scene</option>
+                  </optgroup>
+                  <optgroup label="Gradient">
+                    <option value="GRADIENT">Gradient — Static</option>
+                    <option value="GRADIENT_MOVE">Gradient — Animated</option>
+                  </optgroup>
+                  <optgroup label="Seasonal">
+                    <option value="SNOW">Snow — Falling snowflakes</option>
+                    <option value="LEAVES">Leaves — Autumn drift</option>
+                    <option value="RAIN">Rain — Rainfall</option>
+                    <option value="SAKURA">Sakura — Cherry blossoms</option>
+                    <option value="FIREFLIES">Fireflies — Summer glow</option>
+                  </optgroup>
+                  <optgroup label="Custom Media">
+                    <option value="IMAGE">Image — Static background</option>
+                    <option value="VIDEO">Video — Looping video</option>
+                  </optgroup>
+                  <optgroup label="None">
+                    <option value="NONE">None — Solid color</option>
+                  </optgroup>
                 </select>
               </div>
               <div id="vantaEffectControls" style="margin-top:4px;"></div>
