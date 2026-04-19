@@ -51,7 +51,7 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   // Safari cannot load an untrusted HTTPS site to download the cert, so we serve it over
   // plain HTTP. Everything else redirects to HTTPS.
   const profilePath = path.join(__dirname, 'certs', 'cert.mobileconfig');
-  const HTTP_PORT   = process.env.HTTP_PORT || 80;
+  const HTTP_PORT   = process.env.HTTP_PORT || 8080;
 
   require('http').createServer((req, res) => {
     if (req.url === '/cert') {

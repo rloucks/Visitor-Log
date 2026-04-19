@@ -19,6 +19,6 @@ RUN mkdir -p uploads/photos certs data
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-EXPOSE 3000 80
+EXPOSE 3000 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
