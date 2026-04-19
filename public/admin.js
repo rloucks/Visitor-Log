@@ -119,21 +119,73 @@ function renderVisitors() {
   }
 
   visitorData.forEach(v => {
-    const stay      = formatStay(v.stayHours, v.stayMinutes);
-    const photoHtml = v.photoPath
-      ? `<img src="${esc(v.photoPath)}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid rgba(255,255,255,0.15);">`
-      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);vertical-align:middle;margin-right:8px;font-size:0.9rem;">👤</span>`;
-    const tr = document.createElement('tr');
+    const stay = formatStay(v.stayHours, v.stayMinutes);
+    const tr   = document.createElement('tr');
     tr.innerHTML = `
-      <td style="white-space:nowrap;">${photoHtml}${esc(v.firstName)} ${esc(v.lastName)}</td>
+      <td style="white-space:nowrap;"></td>
       <td>${esc(v.company || '—')}</td>
       <td>${esc(v.host)}</td>
       <td>${new Date(v.checkIn).toLocaleString()}</td>
       <td>${esc(stay)}</td>
       <td><button class="btn btn-danger btn-sm" onclick="deleteVisitor(${v.id})">Delete</button></td>
     `;
+
+    // Build photo element with click handler
+    const nameCell = tr.querySelector('td:first-child');
+    if (v.photoPath) {
+      const img = document.createElement('img');
+      img.src   = v.photoPath;
+      img.alt   = '';
+      img.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid rgba(255,255,255,0.15);cursor:zoom-in;';
+      img.title = 'Click to enlarge';
+      img.addEventListener('click', () => openPhotoLightbox(v.photoPath, `${v.firstName} ${v.lastName}`));
+      nameCell.prepend(img);
+    } else {
+      const placeholder = document.createElement('span');
+      placeholder.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);vertical-align:middle;margin-right:8px;font-size:0.9rem;';
+      placeholder.textContent = '👤';
+      nameCell.prepend(placeholder);
+    }
+    nameCell.append(`${v.firstName} ${v.lastName}`);
+
     tbody.appendChild(tr);
   });
+}
+
+function openPhotoLightbox(src, name) {
+  let overlay = document.getElementById('photoLightbox');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'photoLightbox';
+    overlay.style.cssText = [
+      'position:fixed;inset:0;z-index:10000',
+      'background:rgba(0,0,0,0.85)',
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px',
+      'cursor:zoom-out;backdrop-filter:blur(6px)',
+    ].join(';');
+
+    const img = document.createElement('img');
+    img.id = 'photoLightboxImg';
+    img.style.cssText = 'max-width:min(480px,90vw);max-height:70vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);object-fit:contain;';
+
+    const label = document.createElement('div');
+    label.id = 'photoLightboxLabel';
+    label.style.cssText = 'color:#fff;font-size:1.1rem;font-weight:500;letter-spacing:0.02em;';
+
+    const hint = document.createElement('div');
+    hint.textContent = 'Click anywhere to close';
+    hint.style.cssText = 'color:rgba(255,255,255,0.35);font-size:0.8rem;';
+
+    overlay.appendChild(img);
+    overlay.appendChild(label);
+    overlay.appendChild(hint);
+    overlay.addEventListener('click', () => { overlay.style.display = 'none'; });
+    document.body.appendChild(overlay);
+  }
+
+  document.getElementById('photoLightboxImg').src   = src;
+  document.getElementById('photoLightboxLabel').textContent = name;
+  overlay.style.display = 'flex';
 }
 
 async function clearVisitorLog() {
