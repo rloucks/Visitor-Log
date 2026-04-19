@@ -2,7 +2,17 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const db = require('../db');
+
+// photoPath is stored as "/uploads/photos/visitor-1.jpg" — resolve from project root
+function deleteVisitorPhoto(photoPath) {
+  if (!photoPath) return;
+  try {
+    const file = path.join(__dirname, '..', photoPath);
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+  } catch {}
+}
 
 const router = express.Router();
 
@@ -160,11 +170,15 @@ router.get('/visitors', requireAuth, (req, res) => {
 });
 
 router.delete('/visitors/:id', requireAuth, (req, res) => {
+  const row = db.prepare('SELECT photoPath FROM visitors WHERE id = ?').get(req.params.id);
+  deleteVisitorPhoto(row?.photoPath);
   db.prepare('DELETE FROM visitors WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });
 
 router.delete('/visitors', requireAuth, (req, res) => {
+  const rows = db.prepare('SELECT photoPath FROM visitors WHERE photoPath IS NOT NULL').all();
+  rows.forEach(r => deleteVisitorPhoto(r.photoPath));
   db.prepare('DELETE FROM visitors').run();
   res.json({ success: true });
 });
