@@ -13,7 +13,7 @@ services:
       SERVER_HOSTNAME: "192.168.1.100"
       DB_PATH: "/app/data/visitors.db"
     volumes:
-      - ./data:/app/data         # SQLite database
-      - ./uploads:/app/uploads   # logo + visitor photos
-      - ./certs:/app/certs       # TLS cert (generated on first run)
+      - ./data:/app/data:z         # SQLite database
+      - ./uploads:/app/uploads:z   # logo + visitor photos
+      - ./certs:/app/certs:z       # TLS cert (generated on first run)
     restart: unless-stopped

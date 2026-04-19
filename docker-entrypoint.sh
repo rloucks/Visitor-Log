@@ -4,6 +4,10 @@ set -e
 KEY=/app/certs/key.pem
 CERT=/app/certs/cert.pem
 
+# Ensure the certs directory is writable regardless of how Docker created it
+mkdir -p /app/certs /app/data /app/uploads/photos
+chmod 755 /app/certs /app/data /app/uploads 2>/dev/null || true
+
 if [ ! -f "$KEY" ] || [ ! -f "$CERT" ]; then
   HOST="${SERVER_HOSTNAME:-localhost}"
 
