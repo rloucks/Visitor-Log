@@ -54,10 +54,15 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   const HTTP_PORT   = process.env.HTTP_PORT || 80;
 
   require('http').createServer((req, res) => {
-    if (req.url === '/cert' && fs.existsSync(profilePath)) {
-      res.setHeader('Content-Type', 'application/x-apple-aspen-config');
-      res.setHeader('Content-Disposition', 'attachment; filename="kiosk-cert.mobileconfig"');
-      fs.createReadStream(profilePath).pipe(res);
+    if (req.url === '/cert') {
+      if (fs.existsSync(profilePath)) {
+        res.setHeader('Content-Type', 'application/x-apple-aspen-config');
+        res.setHeader('Content-Disposition', 'attachment; filename="kiosk-cert.mobileconfig"');
+        fs.createReadStream(profilePath).pipe(res);
+      } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Profile not found — delete the certs/ folder and restart the container.');
+      }
     } else {
       const host = (req.headers.host || '').replace(/:80$/, '');
       res.writeHead(301, { Location: `https://${host}${req.url}` });
