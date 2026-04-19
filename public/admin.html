@@ -130,7 +130,10 @@
           <p id="csvResult" style="margin-top:10px;font-size:0.82rem;color:rgba(255,255,255,0.4);"></p>
         </div>
         <div class="card">
-          <h3>Employee List</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="margin:0;">Employee List</h3>
+            <button class="btn btn-outline btn-sm" onclick="exportEmployeeCSV()">Export CSV</button>
+          </div>
           <div class="table-wrap">
             <table class="data-table" id="employeeTable">
               <thead>
@@ -143,6 +146,18 @@
               </thead>
               <tbody></tbody>
             </table>
+          </div>
+        </div>
+
+        <div class="card-danger">
+          <h3>⚠ Danger Zone — Clear Employee List</h3>
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:18px;line-height:1.6;">
+            Permanently removes all employees from the system. Export a copy first if you need to keep the data.
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-white" onclick="exportEmployeeCSV()">Download Export</button>
+            <button class="btn btn-danger" style="border:1px solid rgba(224,85,85,0.5);opacity:1;"
+              onclick="clearEmployeeList()">Clear All Employees</button>
           </div>
         </div>
       </section>

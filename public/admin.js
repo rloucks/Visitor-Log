@@ -249,11 +249,22 @@ async function loadEmployees() {
         <td>${esc(emp.name)}</td>
         <td>${esc(emp.email || '—')}</td>
         <td>${esc(emp.slackUserId || '—')}</td>
-        <td style="display:flex;gap:6px;">
-          <button class="btn btn-outline btn-sm" onclick="editEmployee(${emp.id}, ${JSON.stringify(emp.name)}, ${JSON.stringify(emp.email || '')}, ${JSON.stringify(emp.slackUserId || '')})">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">Delete</button>
-        </td>
+        <td style="display:flex;gap:6px;"></td>
       `;
+      const cell = tr.querySelector('td:last-child');
+
+      const editBtn = document.createElement('button');
+      editBtn.className   = 'btn btn-outline btn-sm';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => editEmployee(emp.id, emp.name, emp.email || '', emp.slackUserId || ''));
+
+      const delBtn = document.createElement('button');
+      delBtn.className   = 'btn btn-danger btn-sm';
+      delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', () => deleteEmployee(emp.id));
+
+      cell.appendChild(editBtn);
+      cell.appendChild(delBtn);
       tbody.appendChild(tr);
     });
   } catch {
@@ -354,6 +365,50 @@ async function importCSV() {
   resultEl.textContent = `Done — ${added} added, ${skipped} skipped.`;
   loadEmployees();
   showToast(`Imported ${added} employee${added !== 1 ? 's' : ''}.`);
+}
+
+function exportEmployeeCSV() {
+  fetch('/api/admin/employees')
+    .then(r => r.json())
+    .then(employees => {
+      if (!employees.length) { showToast('No employees to export.', 'error'); return; }
+      const headers = ['Name', 'Email', 'Slack User ID'];
+      const rows    = employees.map(e => [e.name, e.email || '', e.slackUserId || '']);
+      const csv     = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    })
+    .catch(() => showToast('Failed to fetch employees.', 'error'));
+}
+
+async function clearEmployeeList() {
+  const confirmed = confirm(
+    'REMOVE ALL EMPLOYEES?\n\n' +
+    'This will delete every employee from the system and cannot be undone.'
+  );
+  if (!confirmed) return;
+
+  const check = prompt('Type DELETE to confirm:');
+  if (check?.trim().toUpperCase() !== 'DELETE') {
+    showToast('Cancelled — nothing was deleted.', 'error');
+    return;
+  }
+
+  const res = await fetch('/api/admin/employees', { method: 'DELETE' });
+  if (res.ok) {
+    cancelEditEmployee();
+    loadEmployees();
+    showToast('All employees removed.');
+  } else {
+    showToast('Failed to clear employee list.', 'error');
+  }
 }
 
 async function deleteEmployee(id) {

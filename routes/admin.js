@@ -202,6 +202,11 @@ router.delete('/employees/:id', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+router.delete('/employees', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM employees').run();
+  res.json({ success: true });
+});
+
 // --- Admins ---
 
 router.get('/admins', requireAuth, (req, res) => {
