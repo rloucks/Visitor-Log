@@ -919,6 +919,17 @@ input[type="file"].admin-input {
   margin-bottom: 7px;
 }
 
+.settings-subsection-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+
 /* ============================================================
    Login Page
    ============================================================ */

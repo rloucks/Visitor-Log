@@ -38,7 +38,7 @@ const sectionLoaders = {
   employees:    loadEmployees,
   admins:       loadAdmins,
   integrations: loadIntegrations,
-  appearance:   loadAppearanceSettings,
+  settings:     loadAppearanceSettings,
   events:       loadEvents
 };
 
