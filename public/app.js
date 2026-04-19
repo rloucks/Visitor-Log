@@ -595,16 +595,29 @@ async function initCamera() {
     });
     const video = document.getElementById('kioskCamera');
     video.srcObject = cameraStream;
-    await video.play();
+    video.load(); // ensure browser starts decoding frames
+    await video.play().catch(() => {}); // play() rejection is non-fatal
   } catch {
-    cameraStream = null; // Camera unavailable — silently skip
+    cameraStream = null; // Camera unavailable or permission denied — silently skip
   }
 }
 
 async function captureAndUploadPhoto(visitorId) {
   if (!cameraStream || !visitorId) return;
   try {
-    const video  = document.getElementById('kioskCamera');
+    const video = document.getElementById('kioskCamera');
+
+    // Wait up to 3 s for the video to have live frame data
+    if (video.readyState < 2 || video.videoWidth === 0) {
+      await new Promise(resolve => {
+        const onReady = () => { video.removeEventListener('canplay', onReady); resolve(); };
+        video.addEventListener('canplay', onReady);
+        setTimeout(resolve, 3000); // give up after 3 s rather than hang
+      });
+    }
+
+    if (video.videoWidth === 0) return; // still no frame — skip
+
     const canvas = document.getElementById('kioskPhotoCanvas');
     canvas.width  = 320;
     canvas.height = 240;

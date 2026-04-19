@@ -154,8 +154,9 @@
   </div>
 
   <!-- Hidden camera elements for silent photo capture -->
+  <!-- Must be off-screen (not opacity:0 / 1×1) so iOS Safari still decodes frames -->
   <video id="kioskCamera" playsinline autoplay muted
-    style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"></video>
+    style="position:fixed;top:-9999px;left:-9999px;width:320px;height:240px;pointer-events:none;"></video>
   <canvas id="kioskPhotoCanvas" style="display:none;"></canvas>
 
   <script src="app.js"></script>
