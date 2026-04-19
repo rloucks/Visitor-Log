@@ -1,8 +1,20 @@
 const express = require('express');
 const axios = require('axios');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const db = require('../db');
 
 const router = express.Router();
+
+// Photo upload — memory storage so we can name the file after the visitor ID
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }
+});
+
+const photosDir = path.join(__dirname, '..', 'uploads', 'photos');
+if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
 
 // Employee list for the kiosk dropdown
 router.get('/employees', (req, res) => {
@@ -37,7 +49,7 @@ router.post('/checkin', async (req, res) => {
   const stayHours   = parseInt(req.body.stayHours,   10) || 0;
   const stayMinutes = parseInt(req.body.stayMinutes,  10) || 0;
 
-  db.prepare(`
+  const insertResult = db.prepare(`
     INSERT INTO visitors (firstName, lastName, company, host, stayHours, stayMinutes)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim(), stayHours, stayMinutes);
@@ -76,7 +88,21 @@ router.post('/checkin', async (req, res) => {
     }
   }
 
-  res.json({ success: true });
+  res.json({ success: true, visitorId: insertResult.lastInsertRowid });
+});
+
+// Photo capture — uploaded from kiosk after check-in completes
+router.post('/photo', photoUpload.single('photo'), (req, res) => {
+  const visitorId = parseInt(req.body.visitorId, 10);
+  if (!visitorId || !req.file) return res.status(400).json({ error: 'Missing data.' });
+
+  const filename  = `visitor-${visitorId}.jpg`;
+  const filepath  = path.join(photosDir, filename);
+  fs.writeFileSync(filepath, req.file.buffer);
+
+  const photoPath = `/uploads/photos/${filename}`;
+  db.prepare('UPDATE visitors SET photoPath = ? WHERE id = ?').run(photoPath, visitorId);
+  res.json({ success: true, photoPath });
 });
 
 // Event mode — visitor list with live check-in status

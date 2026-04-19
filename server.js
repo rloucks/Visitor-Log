@@ -10,9 +10,11 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Ensure uploads directory exists
+// Ensure uploads directories exist
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+const photosDir = path.join(__dirname, 'uploads', 'photos');
+if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));

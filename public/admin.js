@@ -119,10 +119,13 @@ function renderVisitors() {
   }
 
   visitorData.forEach(v => {
-    const stay = formatStay(v.stayHours, v.stayMinutes);
+    const stay      = formatStay(v.stayHours, v.stayMinutes);
+    const photoHtml = v.photoPath
+      ? `<img src="${esc(v.photoPath)}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid rgba(255,255,255,0.15);">`
+      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);vertical-align:middle;margin-right:8px;font-size:0.9rem;">👤</span>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${esc(v.firstName)} ${esc(v.lastName)}</td>
+      <td style="white-space:nowrap;">${photoHtml}${esc(v.firstName)} ${esc(v.lastName)}</td>
       <td>${esc(v.company || '—')}</td>
       <td>${esc(v.host)}</td>
       <td>${new Date(v.checkIn).toLocaleString()}</td>

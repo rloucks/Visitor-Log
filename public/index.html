@@ -153,6 +153,11 @@
     </div>
   </div>
 
+  <!-- Hidden camera elements for silent photo capture -->
+  <video id="kioskCamera" playsinline autoplay muted
+    style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"></video>
+  <canvas id="kioskPhotoCanvas" style="display:none;"></canvas>
+
   <script src="app.js"></script>
 </body>
 </html>

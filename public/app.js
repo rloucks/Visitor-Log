@@ -15,6 +15,7 @@ let   timeServerOffset = 0; // ms difference between API server time and local D
 document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings(); // starts clock internally after syncing
   bindInactivity();
+  initCamera();         // warm up camera stream in the background — no await
 });
 
 // ============================================================
@@ -472,9 +473,11 @@ async function submitEventAction() {
         body:    JSON.stringify({ eventVisitorId: selectedEventVisitor.id })
       });
       if (!res.ok) throw new Error('Check-in failed');
+      const data = await res.json();
       document.getElementById('step3Title').textContent    = 'You\'re checked in!';
       document.getElementById('successMessage').textContent =
         `Welcome, ${selectedEventVisitor.firstName}! Enjoy the event.`;
+      captureAndUploadPhoto(data.visitorRecordId);
     }
 
     showScreen('step3');
@@ -559,6 +562,7 @@ async function submitForm() {
     });
 
     if (!res.ok) throw new Error('Check-in failed');
+    const data = await res.json();
 
     document.getElementById('step3Title').textContent     = 'You\'re checked in!';
     document.getElementById('successMessage').textContent =
@@ -566,10 +570,53 @@ async function submitForm() {
 
     showScreen('step3');
     startCountdown();
+    captureAndUploadPhoto(data.visitorId);
   } catch {
     btn.disabled    = false;
     btn.textContent = 'Check In';
     alert('Check-in failed. Please try again or contact reception.');
+  }
+}
+
+// ============================================================
+// Camera — silent photo capture after check-in
+// ============================================================
+let cameraStream = null;
+
+async function initCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    const video = document.getElementById('kioskCamera');
+    video.srcObject = cameraStream;
+    await video.play();
+  } catch {
+    cameraStream = null; // Camera unavailable — silently skip
+  }
+}
+
+async function captureAndUploadPhoto(visitorId) {
+  if (!cameraStream || !visitorId) return;
+  try {
+    const video  = document.getElementById('kioskCamera');
+    const canvas = document.getElementById('kioskPhotoCanvas');
+    canvas.width  = 320;
+    canvas.height = 240;
+    canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.80));
+    if (!blob) return;
+
+    const form = new FormData();
+    form.append('visitorId', String(visitorId));
+    form.append('photo', blob, 'photo.jpg');
+
+    fetch('/api/visitor/photo', { method: 'POST', body: form }).catch(() => {});
+  } catch {
+    // Silent failure — photo capture is best-effort
   }
 }
 
