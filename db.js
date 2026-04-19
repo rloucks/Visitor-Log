@@ -98,6 +98,7 @@ const defaults = {
   specialMessageAlign:    'center',
   specialMessageBold:     '0',
   clockEnabled:           '1',
+  photoCapture:           '0',
 };
 
 const upsertSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`);

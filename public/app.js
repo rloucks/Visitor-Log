@@ -13,9 +13,9 @@ let   timeServerOffset = 0; // ms difference between API server time and local D
 // Init
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadSettings(); // starts clock internally after syncing
+  await loadSettings(); // starts clock, reads photoCapture setting
   bindInactivity();
-  initCamera();         // warm up camera stream in the background — no await
+  // initCamera() is called inside loadSettings() only when photoCapture === '1'
 });
 
 // ============================================================
@@ -162,6 +162,9 @@ async function loadSettings() {
       effectiveClockPos = effectiveClockPos.replace('top-', 'bottom-');
     }
     applyClockPosition(effectiveClockPos);
+
+    // Photo capture
+    if (s.photoCapture === '1') initCamera();
 
     // Vanta background
     const effect  = s.vantaEffect || 'NET';

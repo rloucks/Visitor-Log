@@ -808,6 +808,9 @@ async function loadAppearanceSettings() {
     document.getElementById('specialMessageBgOpacityLbl').textContent = `${bgOp}%`;
     liveSpecialMessage();
 
+    // Kiosk features
+    document.getElementById('photoCapture').checked = s.photoCapture === '1';
+
     // Clock visibility
     document.getElementById('clockEnabled').checked = s.clockEnabled !== '0';
 
@@ -893,6 +896,7 @@ async function saveSettings() {
   const specialMessageBgColor  = document.getElementById('specialMessageBgColor').value;
   const specialMessageBgOpacity= document.getElementById('specialMessageBgOpacity').value;
   const clockEnabled           = document.getElementById('clockEnabled').checked ? '1' : '0';
+  const photoCapture           = document.getElementById('photoCapture').checked  ? '1' : '0';
 
   // Collect current effect controls into vantaOptions
   vantaOptions[vantaEffect] = collectEffectValues(vantaEffect);
@@ -907,7 +911,7 @@ async function saveSettings() {
       fontWeightTitle, fontWeightBody,
       specialMessageEnabled, specialMessage, specialMessageColor, specialMessageBold,
       specialMessageSize, specialMessagePosition, specialMessageAlign,
-      specialMessageBgColor, specialMessageBgOpacity, clockEnabled
+      specialMessageBgColor, specialMessageBgOpacity, clockEnabled, photoCapture
     })
   });
 
