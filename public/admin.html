@@ -109,12 +109,13 @@
       <section id="sec-employees" class="section">
         <h2 class="section-title">Employees</h2>
         <div class="card">
-          <h3>Add Employee</h3>
+          <h3 id="empFormTitle">Add Employee</h3>
           <div class="input-row">
             <input class="admin-input" id="empName"  placeholder="Full Name" />
             <input class="admin-input" id="empEmail" placeholder="Email (optional)" />
             <input class="admin-input" id="empSlack" placeholder="Slack User ID e.g. U0123456789" />
-            <button class="btn btn-white" onclick="addEmployee()">Add</button>
+            <button class="btn btn-white"   id="empSubmitBtn" onclick="addEmployee()">Add</button>
+            <button class="btn btn-outline hidden" id="empCancelBtn" onclick="cancelEditEmployee()">Cancel</button>
           </div>
         </div>
         <div class="card">
@@ -137,7 +138,7 @@
                   <th>Name</th>
                   <th>Email</th>
                   <th>Slack ID</th>
-                  <th style="width:60px;"></th>
+                  <th style="width:110px;"></th>
                 </tr>
               </thead>
               <tbody></tbody>

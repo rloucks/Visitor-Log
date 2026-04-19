@@ -229,6 +229,8 @@ function exportCSV() {
 // ============================================================
 // Employees
 // ============================================================
+let editingEmployeeId = null;
+
 async function loadEmployees() {
   try {
     const res       = await fetch('/api/admin/employees');
@@ -247,7 +249,10 @@ async function loadEmployees() {
         <td>${esc(emp.name)}</td>
         <td>${esc(emp.email || '—')}</td>
         <td>${esc(emp.slackUserId || '—')}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">Delete</button></td>
+        <td style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="editEmployee(${emp.id}, ${JSON.stringify(emp.name)}, ${JSON.stringify(emp.email || '')}, ${JSON.stringify(emp.slackUserId || '')})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">Delete</button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -263,20 +268,45 @@ async function addEmployee() {
 
   if (!name) { showToast('Name is required.', 'error'); return; }
 
-  const res = await fetch('/api/admin/employees', {
-    method: 'POST',
+  const isEdit = editingEmployeeId !== null;
+  const url    = isEdit ? `/api/admin/employees/${editingEmployeeId}` : '/api/admin/employees';
+  const method = isEdit ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, slackUserId })
   });
 
   if (res.ok) {
-    ['empName', 'empEmail', 'empSlack'].forEach(id => document.getElementById(id).value = '');
+    cancelEditEmployee();
     loadEmployees();
-    showToast('Employee added.');
+    showToast(isEdit ? 'Employee updated.' : 'Employee added.');
   } else {
     const d = await res.json();
-    showToast(d.error || 'Failed to add employee.', 'error');
+    showToast(d.error || (isEdit ? 'Failed to update employee.' : 'Failed to add employee.'), 'error');
   }
+}
+
+function editEmployee(id, name, email, slackUserId) {
+  editingEmployeeId = id;
+  document.getElementById('empName').value  = name;
+  document.getElementById('empEmail').value = email;
+  document.getElementById('empSlack').value = slackUserId;
+  document.getElementById('empFormTitle').textContent    = 'Edit Employee';
+  document.getElementById('empSubmitBtn').textContent    = 'Save Changes';
+  document.getElementById('empCancelBtn').classList.remove('hidden');
+  document.getElementById('empName').focus();
+  // Scroll the form into view
+  document.getElementById('empFormTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelEditEmployee() {
+  editingEmployeeId = null;
+  ['empName', 'empEmail', 'empSlack'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('empFormTitle').textContent    = 'Add Employee';
+  document.getElementById('empSubmitBtn').textContent    = 'Add';
+  document.getElementById('empCancelBtn').classList.add('hidden');
 }
 
 async function importCSV() {
@@ -330,6 +360,7 @@ async function deleteEmployee(id) {
   if (!confirm('Remove this employee?')) return;
   const res = await fetch(`/api/admin/employees/${id}`, { method: 'DELETE' });
   if (res.ok) {
+    if (editingEmployeeId === id) cancelEditEmployee();
     loadEmployees();
     showToast('Employee removed.');
   }
