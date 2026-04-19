@@ -835,6 +835,13 @@ function liveFont(fontName) {
   }
 }
 
+function showSettingsTab(name) {
+  document.querySelectorAll('.settings-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.stab === name));
+  document.querySelectorAll('.settings-tab-panel').forEach(p =>
+    p.classList.toggle('active', p.id === 'stab-' + name));
+}
+
 async function loadAppearanceSettings() {
   try {
     const res = await fetch('/api/admin/settings');

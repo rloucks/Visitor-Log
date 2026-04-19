@@ -225,342 +225,353 @@
       <section id="sec-settings" class="section">
         <h2 class="section-title">Settings</h2>
 
-        <!-- Identity -->
-        <div class="card">
-          <h3>Identity</h3>
-          <div class="setting-row">
-            <label class="setting-label" for="settingCompanyName">Display Name</label>
-            <input class="admin-input" id="settingCompanyName" placeholder="Company or system name" style="max-width:320px;" />
+        <div class="card settings-tabcard">
+
+          <!-- Tab bar -->
+          <div class="settings-tabs">
+            <button class="settings-tab active" data-stab="identity"   onclick="showSettingsTab('identity')">Identity</button>
+            <button class="settings-tab"         data-stab="appearance" onclick="showSettingsTab('appearance')">Appearance</button>
+            <button class="settings-tab"         data-stab="clock"      onclick="showSettingsTab('clock')">Clock</button>
+            <button class="settings-tab"         data-stab="banner"     onclick="showSettingsTab('banner')">Message Banner</button>
+            <button class="settings-tab"         data-stab="features"   onclick="showSettingsTab('features')">Features</button>
           </div>
-          <div class="setting-row">
-            <label class="setting-label">Logo</label>
-            <div>
-              <div id="currentLogo" style="margin-bottom:10px;"></div>
-              <div class="input-row" style="margin:0;">
-                <input type="file" id="logoFile" accept="image/*" class="admin-input" style="max-width:280px;" />
-                <button class="btn btn-outline" onclick="uploadLogo()">Upload</button>
+
+          <div class="settings-tab-body">
+
+            <!-- Identity -->
+            <div id="stab-identity" class="settings-tab-panel active">
+              <div class="setting-row">
+                <label class="setting-label" for="settingCompanyName">Display Name</label>
+                <input class="admin-input" id="settingCompanyName" placeholder="Company or system name" style="max-width:320px;" />
               </div>
-              <p style="margin-top:8px;font-size:0.78rem;color:rgba(255,255,255,0.3);">
-                PNG or SVG with transparent background recommended. Max 5 MB.
+              <div class="setting-row">
+                <label class="setting-label">Logo</label>
+                <div>
+                  <div id="currentLogo" style="margin-bottom:10px;"></div>
+                  <div class="input-row" style="margin:0;">
+                    <input type="file" id="logoFile" accept="image/*" class="admin-input" style="max-width:280px;" />
+                    <button class="btn btn-outline" onclick="uploadLogo()">Upload</button>
+                  </div>
+                  <p style="margin-top:8px;font-size:0.78rem;color:rgba(255,255,255,0.3);">
+                    PNG or SVG with transparent background recommended. Max 5 MB.
+                  </p>
+                </div>
+              </div>
+              <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
+            </div>
+
+            <!-- Appearance -->
+            <div id="stab-appearance" class="settings-tab-panel">
+              <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:20px;">
+                Changes apply live as you pick. Hit Save to persist across sessions.
               </p>
-            </div>
-          </div>
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
-        </div>
 
-        <!-- Appearance -->
-        <div class="card">
-          <h3>Appearance</h3>
-          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:20px;">
-            Changes apply live as you pick. Hit Save to persist across sessions.
-          </p>
+              <div class="settings-subsection-label">Colors</div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="uiAccentColor">Accent &amp; Buttons</label>
+                  <input type="color" class="admin-input" id="uiAccentColor" value="#ffffff"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="liveColor('--accent', this.value)" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="uiTextColor">Text</label>
+                  <input type="color" class="admin-input" id="uiTextColor" value="#ffffff"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="liveColor('--text', this.value)" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="uiSurfaceColor">Card</label>
+                  <input type="color" class="admin-input" id="uiSurfaceColor" value="#111111"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="applyLiveSurface()" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="uiBgColor">Background</label>
+                  <input type="color" class="admin-input" id="uiBgColor" value="#000000"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="liveColor('--bg', this.value)" />
+                </div>
+              </div>
+              <div class="setting-row">
+                <label class="setting-label" for="uiSurfaceOpacity">Card Transparency: <span id="surfaceOpacityLbl">100%</span></label>
+                <input type="range" class="admin-input" id="uiSurfaceOpacity" min="0" max="100" step="1" value="100"
+                  style="max-width:240px;padding:6px 0;cursor:pointer;"
+                  oninput="applyLiveSurface()" />
+              </div>
 
-          <div class="settings-subsection-label">Colors</div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="uiAccentColor">Accent &amp; Buttons</label>
-              <input type="color" class="admin-input" id="uiAccentColor" value="#ffffff"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveColor('--accent', this.value)" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="uiTextColor">Text</label>
-              <input type="color" class="admin-input" id="uiTextColor" value="#ffffff"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveColor('--text', this.value)" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="uiSurfaceColor">Card</label>
-              <input type="color" class="admin-input" id="uiSurfaceColor" value="#111111"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="applyLiveSurface()" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="uiBgColor">Background</label>
-              <input type="color" class="admin-input" id="uiBgColor" value="#000000"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveColor('--bg', this.value)" />
-            </div>
-          </div>
-          <div class="setting-row">
-            <label class="setting-label" for="uiSurfaceOpacity">Card Transparency: <span id="surfaceOpacityLbl">100%</span></label>
-            <input type="range" class="admin-input" id="uiSurfaceOpacity" min="0" max="100" step="1" value="100"
-              style="max-width:240px;padding:6px 0;cursor:pointer;"
-              oninput="applyLiveSurface()" />
-          </div>
+              <div class="settings-subsection-label" style="margin-top:24px;">Font</div>
+              <div class="setting-row">
+                <label class="setting-label" for="uiFont">Typeface</label>
+                <select class="admin-input" id="uiFont" onchange="liveFont(this.value)" style="max-width:280px;">
+                  <optgroup label="Clean / Modern">
+                    <option value="Roboto">Roboto</option>
+                    <option value="Inter">Inter</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Nunito Sans">Nunito Sans</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Lato">Lato</option>
+                    <option value="DM Sans">DM Sans</option>
+                    <option value="Outfit">Outfit</option>
+                    <option value="Figtree">Figtree</option>
+                    <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                  </optgroup>
+                  <optgroup label="Bold / Display">
+                    <option value="Oswald">Oswald</option>
+                    <option value="Barlow Condensed">Barlow Condensed</option>
+                    <option value="Rajdhani">Rajdhani</option>
+                    <option value="Bebas Neue">Bebas Neue</option>
+                    <option value="Exo 2">Exo 2</option>
+                  </optgroup>
+                  <optgroup label="Tech / Futuristic">
+                    <option value="Orbitron">Orbitron</option>
+                    <option value="Share Tech">Share Tech</option>
+                    <option value="Russo One">Russo One</option>
+                    <option value="Oxanium">Oxanium</option>
+                  </optgroup>
+                  <optgroup label="Elegant">
+                    <option value="Playfair Display">Playfair Display</option>
+                    <option value="Cormorant Garamond">Cormorant Garamond</option>
+                    <option value="Lora">Lora</option>
+                  </optgroup>
+                  <optgroup label="Monospace">
+                    <option value="Space Mono">Space Mono</option>
+                    <option value="JetBrains Mono">JetBrains Mono</option>
+                    <option value="IBM Plex Mono">IBM Plex Mono</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div id="fontPreview" style="margin-top:8px;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:1.3rem;color:rgba(255,255,255,0.65);letter-spacing:0.02em;">
+                The quick brown fox jumps over the lazy dog — 0123456789
+              </div>
+              <div style="display:flex;gap:32px;flex-wrap:wrap;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="fontWeightTitle">Title Weight: <span id="fontWeightTitleLbl">300</span></label>
+                  <input type="range" class="admin-input" id="fontWeightTitle" min="100" max="900" step="100" value="300"
+                    style="max-width:200px;padding:6px 0;cursor:pointer;"
+                    oninput="liveFontWeight('title', this.value)" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="fontWeightBody">Body Weight: <span id="fontWeightBodyLbl">400</span></label>
+                  <input type="range" class="admin-input" id="fontWeightBody" min="100" max="900" step="100" value="400"
+                    style="max-width:200px;padding:6px 0;cursor:pointer;"
+                    oninput="liveFontWeight('body', this.value)" />
+                </div>
+              </div>
 
-          <div class="settings-subsection-label" style="margin-top:20px;">Font</div>
-          <div class="setting-row">
-            <label class="setting-label" for="uiFont">Typeface</label>
-            <select class="admin-input" id="uiFont" onchange="liveFont(this.value)" style="max-width:280px;">
-              <optgroup label="Clean / Modern">
-                <option value="Roboto">Roboto</option>
-                <option value="Inter">Inter</option>
-                <option value="Poppins">Poppins</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Nunito Sans">Nunito Sans</option>
-                <option value="Open Sans">Open Sans</option>
-                <option value="Lato">Lato</option>
-                <option value="DM Sans">DM Sans</option>
-                <option value="Outfit">Outfit</option>
-                <option value="Figtree">Figtree</option>
-                <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-              </optgroup>
-              <optgroup label="Bold / Display">
-                <option value="Oswald">Oswald</option>
-                <option value="Barlow Condensed">Barlow Condensed</option>
-                <option value="Rajdhani">Rajdhani</option>
-                <option value="Bebas Neue">Bebas Neue</option>
-                <option value="Exo 2">Exo 2</option>
-              </optgroup>
-              <optgroup label="Tech / Futuristic">
-                <option value="Orbitron">Orbitron</option>
-                <option value="Share Tech">Share Tech</option>
-                <option value="Russo One">Russo One</option>
-                <option value="Oxanium">Oxanium</option>
-              </optgroup>
-              <optgroup label="Elegant">
-                <option value="Playfair Display">Playfair Display</option>
-                <option value="Cormorant Garamond">Cormorant Garamond</option>
-                <option value="Lora">Lora</option>
-              </optgroup>
-              <optgroup label="Monospace">
-                <option value="Space Mono">Space Mono</option>
-                <option value="JetBrains Mono">JetBrains Mono</option>
-                <option value="IBM Plex Mono">IBM Plex Mono</option>
-              </optgroup>
-            </select>
-          </div>
-          <div id="fontPreview" style="margin-top:8px;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:1.3rem;color:rgba(255,255,255,0.65);letter-spacing:0.02em;">
-            The quick brown fox jumps over the lazy dog — 0123456789
-          </div>
-          <div style="display:flex;gap:32px;flex-wrap:wrap;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="fontWeightTitle">Title Weight: <span id="fontWeightTitleLbl">300</span></label>
-              <input type="range" class="admin-input" id="fontWeightTitle" min="100" max="900" step="100" value="300"
-                style="max-width:200px;padding:6px 0;cursor:pointer;"
-                oninput="liveFontWeight('title', this.value)" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="fontWeightBody">Body Weight: <span id="fontWeightBodyLbl">400</span></label>
-              <input type="range" class="admin-input" id="fontWeightBody" min="100" max="900" step="100" value="400"
-                style="max-width:200px;padding:6px 0;cursor:pointer;"
-                oninput="liveFontWeight('body', this.value)" />
-            </div>
-          </div>
+              <div class="settings-subsection-label" style="margin-top:24px;">Background Effect</div>
+              <div class="setting-row">
+                <label class="setting-label" for="settingVantaEffect">Effect</label>
+                <select class="admin-input" id="settingVantaEffect" onchange="onEffectChange()" style="max-width:260px;">
+                  <option value="NET">Net — Connected nodes</option>
+                  <option value="DOTS">Dots — Particle field</option>
+                  <option value="WAVES">Waves — Ocean surface</option>
+                  <option value="BIRDS">Birds — Flocking swarm</option>
+                  <option value="RINGS">Rings — Pulsing circles</option>
+                  <option value="CELLS">Cells — Organic mesh</option>
+                  <option value="FOG">Fog — Volumetric haze</option>
+                  <option value="GLOBE">Globe — Spinning sphere</option>
+                  <option value="HALO">Halo — Glowing ring</option>
+                  <option value="RIPPLE">Ripple — Water surface</option>
+                  <option value="CLOUDS">Clouds — Sky scene</option>
+                  <option value="NONE">None — Solid color</option>
+                </select>
+              </div>
+              <div id="vantaEffectControls" style="margin-top:4px;"></div>
 
-          <div class="settings-subsection-label" style="margin-top:20px;">Background Effect</div>
-          <div class="setting-row">
-            <label class="setting-label" for="settingVantaEffect">Effect</label>
-            <select class="admin-input" id="settingVantaEffect" onchange="onEffectChange()" style="max-width:260px;">
-              <option value="NET">Net — Connected nodes</option>
-              <option value="DOTS">Dots — Particle field</option>
-              <option value="WAVES">Waves — Ocean surface</option>
-              <option value="BIRDS">Birds — Flocking swarm</option>
-              <option value="RINGS">Rings — Pulsing circles</option>
-              <option value="CELLS">Cells — Organic mesh</option>
-              <option value="FOG">Fog — Volumetric haze</option>
-              <option value="GLOBE">Globe — Spinning sphere</option>
-              <option value="HALO">Halo — Glowing ring</option>
-              <option value="RIPPLE">Ripple — Water surface</option>
-              <option value="CLOUDS">Clouds — Sky scene</option>
-              <option value="NONE">None — Solid color</option>
-            </select>
-          </div>
-          <div id="vantaEffectControls" style="margin-top:4px;"></div>
-
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:20px;">Save</button>
-        </div>
-
-        <!-- Clock -->
-        <div class="card">
-          <h3>Clock</h3>
-          <div class="setting-row">
-            <label class="setting-label">Visibility</label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="clockEnabled" checked
-                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show clock on kiosk</span>
-            </label>
-          </div>
-          <div style="display:flex;gap:32px;flex-wrap:wrap;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="clockTimezone">Timezone</label>
-              <select class="admin-input" id="clockTimezone" style="max-width:260px;">
-                <optgroup label="United States">
-                  <option value="America/New_York">Eastern — New York</option>
-                  <option value="America/Chicago">Central — Chicago</option>
-                  <option value="America/Denver">Mountain — Denver</option>
-                  <option value="America/Phoenix">Mountain (no DST) — Phoenix</option>
-                  <option value="America/Los_Angeles">Pacific — Los Angeles</option>
-                  <option value="America/Anchorage">Alaska — Anchorage</option>
-                  <option value="Pacific/Honolulu">Hawaii — Honolulu</option>
-                </optgroup>
-                <optgroup label="Canada">
-                  <option value="America/Toronto">Eastern — Toronto</option>
-                  <option value="America/Winnipeg">Central — Winnipeg</option>
-                  <option value="America/Edmonton">Mountain — Edmonton</option>
-                  <option value="America/Vancouver">Pacific — Vancouver</option>
-                </optgroup>
-                <optgroup label="Europe">
-                  <option value="Europe/London">London (GMT/BST)</option>
-                  <option value="Europe/Paris">Paris (CET)</option>
-                  <option value="Europe/Berlin">Berlin (CET)</option>
-                  <option value="Europe/Madrid">Madrid</option>
-                  <option value="Europe/Rome">Rome</option>
-                  <option value="Europe/Moscow">Moscow</option>
-                </optgroup>
-                <optgroup label="Asia / Middle East">
-                  <option value="Asia/Dubai">Dubai (GST)</option>
-                  <option value="Asia/Kolkata">India (IST)</option>
-                  <option value="Asia/Singapore">Singapore</option>
-                  <option value="Asia/Tokyo">Tokyo (JST)</option>
-                  <option value="Asia/Shanghai">China (CST)</option>
-                  <option value="Asia/Seoul">Seoul (KST)</option>
-                </optgroup>
-                <optgroup label="Australia / Pacific">
-                  <option value="Australia/Sydney">Sydney (AEST)</option>
-                  <option value="Australia/Melbourne">Melbourne</option>
-                  <option value="Australia/Perth">Perth</option>
-                  <option value="Pacific/Auckland">Auckland (NZST)</option>
-                </optgroup>
-                <optgroup label="Other">
-                  <option value="UTC">UTC</option>
-                </optgroup>
-              </select>
+              <button class="btn btn-white" onclick="saveSettings()" style="margin-top:24px;">Save</button>
             </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label">Format</label>
-              <div style="display:flex;gap:20px;margin-top:6px;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
-                  <input type="radio" name="clockFormat" id="clockFormat12" value="12" /> 12-hour <span style="color:rgba(255,255,255,0.35);">3:30 PM</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
-                  <input type="radio" name="clockFormat" id="clockFormat24" value="24" /> 24-hour <span style="color:rgba(255,255,255,0.35);">15:30</span>
+
+            <!-- Clock -->
+            <div id="stab-clock" class="settings-tab-panel">
+              <div class="setting-row">
+                <label class="setting-label">Visibility</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                  <input type="checkbox" id="clockEnabled" checked
+                    style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+                  <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show clock on kiosk</span>
                 </label>
               </div>
+              <div style="display:flex;gap:32px;flex-wrap:wrap;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="clockTimezone">Timezone</label>
+                  <select class="admin-input" id="clockTimezone" style="max-width:260px;">
+                    <optgroup label="United States">
+                      <option value="America/New_York">Eastern — New York</option>
+                      <option value="America/Chicago">Central — Chicago</option>
+                      <option value="America/Denver">Mountain — Denver</option>
+                      <option value="America/Phoenix">Mountain (no DST) — Phoenix</option>
+                      <option value="America/Los_Angeles">Pacific — Los Angeles</option>
+                      <option value="America/Anchorage">Alaska — Anchorage</option>
+                      <option value="Pacific/Honolulu">Hawaii — Honolulu</option>
+                    </optgroup>
+                    <optgroup label="Canada">
+                      <option value="America/Toronto">Eastern — Toronto</option>
+                      <option value="America/Winnipeg">Central — Winnipeg</option>
+                      <option value="America/Edmonton">Mountain — Edmonton</option>
+                      <option value="America/Vancouver">Pacific — Vancouver</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option value="Europe/London">London (GMT/BST)</option>
+                      <option value="Europe/Paris">Paris (CET)</option>
+                      <option value="Europe/Berlin">Berlin (CET)</option>
+                      <option value="Europe/Madrid">Madrid</option>
+                      <option value="Europe/Rome">Rome</option>
+                      <option value="Europe/Moscow">Moscow</option>
+                    </optgroup>
+                    <optgroup label="Asia / Middle East">
+                      <option value="Asia/Dubai">Dubai (GST)</option>
+                      <option value="Asia/Kolkata">India (IST)</option>
+                      <option value="Asia/Singapore">Singapore</option>
+                      <option value="Asia/Tokyo">Tokyo (JST)</option>
+                      <option value="Asia/Shanghai">China (CST)</option>
+                      <option value="Asia/Seoul">Seoul (KST)</option>
+                    </optgroup>
+                    <optgroup label="Australia / Pacific">
+                      <option value="Australia/Sydney">Sydney (AEST)</option>
+                      <option value="Australia/Melbourne">Melbourne</option>
+                      <option value="Australia/Perth">Perth</option>
+                      <option value="Pacific/Auckland">Auckland (NZST)</option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option value="UTC">UTC</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label">Format</label>
+                  <div style="display:flex;gap:20px;margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
+                      <input type="radio" name="clockFormat" id="clockFormat12" value="12" /> 12-hour <span style="color:rgba(255,255,255,0.35);">3:30 PM</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:rgba(255,255,255,0.7);">
+                      <input type="radio" name="clockFormat" id="clockFormat24" value="24" /> 24-hour <span style="color:rgba(255,255,255,0.35);">15:30</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="clockPosition">Position</label>
+                  <select class="admin-input" id="clockPosition" style="max-width:180px;">
+                    <option value="top-left">Top Left</option>
+                    <option value="top-center">Top Center</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="bottom-center">Bottom Center</option>
+                    <option value="bottom-right">Bottom Right</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-white" onclick="saveSettings()" style="margin-top:20px;">Save</button>
             </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="clockPosition">Position</label>
-              <select class="admin-input" id="clockPosition" style="max-width:180px;">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:16px;">Save</button>
-        </div>
 
-        <!-- Message Banner -->
-        <div class="card">
-          <h3>Message Banner</h3>
-          <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
-            An optional banner visible on the kiosk idle screen and during event check-in.
-          </p>
-          <div class="setting-row">
-            <label class="setting-label">Enabled</label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="specialMessageEnabled"
-                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show on kiosk</span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <label class="setting-label" for="specialMessage">Message</label>
-            <textarea id="specialMessage" class="admin-input"
-              placeholder="e.g. Welcome! Please see the front desk after checking in."
-              style="max-width:440px;min-height:72px;resize:vertical;line-height:1.5;"
-              oninput="liveSpecialMessage()"></textarea>
-          </div>
-
-          <div class="settings-subsection-label" style="margin-top:4px;">Text Style</div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="specialMessageColor">Color</label>
-              <input type="color" class="admin-input" id="specialMessageColor" value="#ffffff"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveSpecialMessage()" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="specialMessageBoldCheck">Bold</label>
-              <input type="checkbox" id="specialMessageBoldCheck"
-                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"
-                onchange="liveSpecialMessage()" />
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="specialMessageSize">Size: <span id="specialMessageSizeLbl">1.0</span>rem</label>
-              <input type="range" class="admin-input" id="specialMessageSize"
-                min="0.7" max="2.2" step="0.1" value="1.0"
-                style="max-width:200px;padding:6px 0;cursor:pointer;"
-                oninput="liveSpecialMessage()" />
-            </div>
-          </div>
-
-          <div class="settings-subsection-label">Position &amp; Alignment</div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="specialMessagePosition">Position</label>
-              <select class="admin-input" id="specialMessagePosition" style="max-width:180px;"
-                onchange="liveSpecialMessage()">
-                <option value="bottom">Bottom</option>
-                <option value="top">Top</option>
-              </select>
-            </div>
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label">Alignment</label>
-              <div style="display:flex;gap:16px;margin-top:6px;">
-                <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
-                  <input type="radio" name="specialMessageAlign" value="left" onchange="liveSpecialMessage()"> Left
-                </label>
-                <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
-                  <input type="radio" name="specialMessageAlign" value="center" checked onchange="liveSpecialMessage()"> Center
-                </label>
-                <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
-                  <input type="radio" name="specialMessageAlign" value="right" onchange="liveSpecialMessage()"> Right
+            <!-- Message Banner -->
+            <div id="stab-banner" class="settings-tab-panel">
+              <p style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+                An optional banner visible on the kiosk idle screen and during event check-in.
+              </p>
+              <div class="setting-row">
+                <label class="setting-label">Enabled</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                  <input type="checkbox" id="specialMessageEnabled"
+                    style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+                  <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">Show on kiosk</span>
                 </label>
               </div>
-            </div>
-          </div>
+              <div class="setting-row">
+                <label class="setting-label" for="specialMessage">Message</label>
+                <textarea id="specialMessage" class="admin-input"
+                  placeholder="e.g. Welcome! Please see the front desk after checking in."
+                  style="max-width:440px;min-height:72px;resize:vertical;line-height:1.5;"
+                  oninput="liveSpecialMessage()"></textarea>
+              </div>
 
-          <div class="settings-subsection-label">Banner Background</div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
-            <div class="setting-row" style="margin:0;">
-              <label class="setting-label" for="specialMessageBgColor">Color</label>
-              <input type="color" class="admin-input" id="specialMessageBgColor" value="#ffffff"
-                style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
-                oninput="liveSpecialMessage()" />
-            </div>
-            <div class="setting-row" style="margin:0;flex:1;min-width:200px;">
-              <label class="setting-label" for="specialMessageBgOpacity">Opacity: <span id="specialMessageBgOpacityLbl">7%</span></label>
-              <input type="range" class="admin-input" id="specialMessageBgOpacity"
-                min="0" max="100" step="1" value="7"
-                style="max-width:200px;padding:6px 0;cursor:pointer;"
-                oninput="liveSpecialMessage()" />
-            </div>
-          </div>
+              <div class="settings-subsection-label" style="margin-top:8px;">Text Style</div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="specialMessageColor">Color</label>
+                  <input type="color" class="admin-input" id="specialMessageColor" value="#ffffff"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="liveSpecialMessage()" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="specialMessageBoldCheck">Bold</label>
+                  <input type="checkbox" id="specialMessageBoldCheck"
+                    style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"
+                    onchange="liveSpecialMessage()" />
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="specialMessageSize">Size: <span id="specialMessageSizeLbl">1.0</span>rem</label>
+                  <input type="range" class="admin-input" id="specialMessageSize"
+                    min="0.7" max="2.2" step="0.1" value="1.0"
+                    style="max-width:200px;padding:6px 0;cursor:pointer;"
+                    oninput="liveSpecialMessage()" />
+                </div>
+              </div>
 
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:20px;">Save</button>
-        </div>
+              <div class="settings-subsection-label">Position &amp; Alignment</div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:16px;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="specialMessagePosition">Position</label>
+                  <select class="admin-input" id="specialMessagePosition" style="max-width:180px;"
+                    onchange="liveSpecialMessage()">
+                    <option value="bottom">Bottom</option>
+                    <option value="top">Top</option>
+                  </select>
+                </div>
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label">Alignment</label>
+                  <div style="display:flex;gap:16px;margin-top:6px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                      <input type="radio" name="specialMessageAlign" value="left" onchange="liveSpecialMessage()"> Left
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                      <input type="radio" name="specialMessageAlign" value="center" checked onchange="liveSpecialMessage()"> Center
+                    </label>
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.88rem;">
+                      <input type="radio" name="specialMessageAlign" value="right" onchange="liveSpecialMessage()"> Right
+                    </label>
+                  </div>
+                </div>
+              </div>
 
-        <!-- Kiosk Features -->
-        <div class="card">
-          <h3>Kiosk Features</h3>
-          <div class="setting-row">
-            <label class="setting-label">Visitor Photo</label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="photoCapture"
-                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
-              <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">
-                Silently capture a photo after each check-in (requires HTTPS &amp; camera permission)
-              </span>
-            </label>
-          </div>
-          <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
-        </div>
+              <div class="settings-subsection-label">Banner Background</div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+                <div class="setting-row" style="margin:0;">
+                  <label class="setting-label" for="specialMessageBgColor">Color</label>
+                  <input type="color" class="admin-input" id="specialMessageBgColor" value="#ffffff"
+                    style="max-width:58px;height:38px;padding:2px;cursor:pointer;"
+                    oninput="liveSpecialMessage()" />
+                </div>
+                <div class="setting-row" style="margin:0;flex:1;min-width:200px;">
+                  <label class="setting-label" for="specialMessageBgOpacity">Opacity: <span id="specialMessageBgOpacityLbl">7%</span></label>
+                  <input type="range" class="admin-input" id="specialMessageBgOpacity"
+                    min="0" max="100" step="1" value="7"
+                    style="max-width:200px;padding:6px 0;cursor:pointer;"
+                    oninput="liveSpecialMessage()" />
+                </div>
+              </div>
+
+              <button class="btn btn-white" onclick="saveSettings()" style="margin-top:24px;">Save</button>
+            </div>
+
+            <!-- Features -->
+            <div id="stab-features" class="settings-tab-panel">
+              <div class="setting-row">
+                <label class="setting-label">Visitor Photo</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                  <input type="checkbox" id="photoCapture"
+                    style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);">
+                  <span style="font-size:0.88rem;color:rgba(255,255,255,0.5);">
+                    Silently capture a photo after each check-in (requires HTTPS &amp; camera permission)
+                  </span>
+                </label>
+              </div>
+              <button class="btn btn-white" onclick="saveSettings()" style="margin-top:8px;">Save</button>
+            </div>
+
+          </div><!-- /.settings-tab-body -->
+        </div><!-- /.card.settings-tabcard -->
 
       </section>
 

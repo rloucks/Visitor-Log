@@ -930,6 +930,58 @@ input[type="file"].admin-input {
   margin-bottom: 14px;
 }
 
+/* Settings tab card */
+.settings-tabcard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.settings-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 8px;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.settings-tabs::-webkit-scrollbar { display: none; }
+
+.settings-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 14px 18px 12px;
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.38);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.settings-tab:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.settings-tab.active {
+  color: var(--text, #fff);
+  border-bottom-color: var(--accent, #fff);
+}
+
+.settings-tab-body {
+  padding: 28px;
+}
+
+.settings-tab-panel {
+  display: none;
+}
+
+.settings-tab-panel.active {
+  display: block;
+}
+
 /* ============================================================
    Login Page
    ============================================================ */
