@@ -35,7 +35,19 @@ app.use(session({
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/admin', adminRoutes);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\x1b[32mServer running on http://localhost:${PORT}\x1b[0m`);
-});
+const PORT    = process.env.PORT || 3000;
+const keyPath  = path.join(__dirname, 'certs', 'key.pem');
+const certPath = path.join(__dirname, 'certs', 'cert.pem');
+
+if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+  require('https').createServer({
+    key:  fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
+  }, app).listen(PORT, () => {
+    console.log(`\x1b[32mServer running on https://0.0.0.0:${PORT}\x1b[0m`);
+  });
+} else {
+  app.listen(PORT, () => {
+    console.log(`\x1b[32mServer running on http://localhost:${PORT}\x1b[0m`);
+  });
+}

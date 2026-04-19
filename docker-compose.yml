@@ -1,0 +1,19 @@
+services:
+  kiosk:
+    build: .
+    ports:
+      - "443:3000"   # access via https://<server-ip> on the iPad
+      # - "3000:3000"  # alternative if 443 is already in use
+    environment:
+      NODE_ENV: production
+      SESSION_SECRET: "change-this-to-a-long-random-string"
+      # Set this to the LAN IP (or hostname) the iPad uses to reach this server.
+      # The TLS cert will be generated with this value in its Subject Alternative Name,
+      # which iOS requires before it will trust a self-signed certificate.
+      SERVER_HOSTNAME: "192.168.1.100"
+      DB_PATH: "/app/data/visitors.db"
+    volumes:
+      - ./data:/app/data         # SQLite database
+      - ./uploads:/app/uploads   # logo + visitor photos
+      - ./certs:/app/certs       # TLS cert (generated on first run)
+    restart: unless-stopped

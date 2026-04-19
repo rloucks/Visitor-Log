@@ -1,7 +1,14 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 
-const db = new Database('visitors.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'visitors.db');
+// Ensure parent directory exists (e.g. /app/data/ inside Docker)
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+
+const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
 
