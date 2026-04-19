@@ -46,6 +46,27 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   }, app).listen(PORT, () => {
     console.log(`\x1b[32mServer running on https://0.0.0.0:${PORT}\x1b[0m`);
   });
+
+  // HTTP server on port 80 — only used to deliver the .mobileconfig for iPad cert install.
+  // Safari cannot load an untrusted HTTPS site to download the cert, so we serve it over
+  // plain HTTP. Everything else redirects to HTTPS.
+  const profilePath = path.join(__dirname, 'certs', 'cert.mobileconfig');
+  const HTTP_PORT   = process.env.HTTP_PORT || 80;
+
+  require('http').createServer((req, res) => {
+    if (req.url === '/cert' && fs.existsSync(profilePath)) {
+      res.setHeader('Content-Type', 'application/x-apple-aspen-config');
+      res.setHeader('Content-Disposition', 'attachment; filename="kiosk-cert.mobileconfig"');
+      fs.createReadStream(profilePath).pipe(res);
+    } else {
+      const host = (req.headers.host || '').replace(/:80$/, '');
+      res.writeHead(301, { Location: `https://${host}${req.url}` });
+      res.end();
+    }
+  }).listen(HTTP_PORT, () => {
+    console.log(`\x1b[32mHTTP on port ${HTTP_PORT} — iPad cert install: http://<server-ip>/cert\x1b[0m`);
+  });
+
 } else {
   app.listen(PORT, () => {
     console.log(`\x1b[32mServer running on http://localhost:${PORT}\x1b[0m`);

@@ -51,11 +51,61 @@ OPENSSLCFG
 
   rm -f "$CFG"
 
-  echo "[kiosk] Certificate written to /app/certs/cert.pem"
+  # Generate iOS .mobileconfig profile so the iPad can install the cert via Safari
+  UUID1=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "A1B2C3D4-0001-0001-0001-000000000001")
+  UUID2=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "A1B2C3D4-0002-0002-0002-000000000002")
+  CERT_DATA=$(base64 "$CERT")
+
+  cat > /app/certs/cert.mobileconfig << PROFILE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>PayloadCertificateFileName</key>
+			<string>kiosk.cer</string>
+			<key>PayloadContent</key>
+			<data>
+$CERT_DATA
+			</data>
+			<key>PayloadDescription</key>
+			<string>Visitor Kiosk TLS Certificate</string>
+			<key>PayloadDisplayName</key>
+			<string>Visitor Kiosk</string>
+			<key>PayloadIdentifier</key>
+			<string>com.visitorkiosk.cert</string>
+			<key>PayloadType</key>
+			<string>com.apple.security.root</string>
+			<key>PayloadUUID</key>
+			<string>$UUID1</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string>Installs the TLS certificate for the Visitor Check-In kiosk</string>
+	<key>PayloadDisplayName</key>
+	<string>Visitor Kiosk Certificate</string>
+	<key>PayloadIdentifier</key>
+	<string>com.visitorkiosk</string>
+	<key>PayloadRemovalDisallowed</key>
+	<false/>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>$UUID2</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>
+PROFILE
+
   echo "[kiosk] --- iPad setup ---"
-  echo "[kiosk] 1. Copy cert.pem from the 'certs' volume to your iPad (AirDrop, email, etc.)"
-  echo "[kiosk] 2. On iPad: Settings → General → VPN & Device Management → install the profile"
-  echo "[kiosk] 3. Settings → General → About → Certificate Trust Settings → enable full trust"
+  echo "[kiosk] On the iPad, open Safari and go to: http://$HOST/cert"
+  echo "[kiosk] Safari will prompt to install a profile — tap Install."
+  echo "[kiosk] Then: Settings → General → About → Certificate Trust Settings → enable full trust."
   echo "[kiosk] ----------------"
 fi
 

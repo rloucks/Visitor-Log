@@ -2,8 +2,8 @@ services:
   kiosk:
     build: .
     ports:
-      - "443:3000"   # access via https://<server-ip> on the iPad
-      # - "3000:3000"  # alternative if 443 is already in use
+      - "443:3000"   # main app — https://<server-ip>
+      - "80:80"      # cert install only — http://<server-ip>/cert
     environment:
       NODE_ENV: production
       SESSION_SECRET: "change-this-to-a-long-random-string"
