@@ -168,13 +168,6 @@
         ]
       ]
     },
-    "Log to Calendar": {
-      "main": [
-        [
-          { "node": "Has Host Slack ID?", "type": "main", "index": 0 }
-        ]
-      ]
-    },
     "Has Host Slack ID?": {
       "main": [
         [
