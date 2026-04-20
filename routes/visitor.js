@@ -82,11 +82,9 @@ router.post('/checkin', async (req, res) => {
   } else if (slackUrl) {
     try {
       const companyStr = payload.company ? ` from *${payload.company}*` : '';
-      const hostStr = payload.hostSlackId
-        ? `*${payload.host}* <@${payload.hostSlackId}>`
-        : `*${payload.host}*`;
+      const hostMention = payload.hostSlackId ? `<@${payload.hostSlackId}>` : `*${payload.host}*`;
       await axios.post(slackUrl, {
-        text: `:wave: *Visitor Check-In*\n*${payload.firstName} ${payload.lastName}*${companyStr} has arrived to see ${hostStr}.`
+        text: `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`
       });
     } catch (err) {
       console.error('Slack notification failed:', err.message);
