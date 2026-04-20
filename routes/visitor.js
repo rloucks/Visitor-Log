@@ -75,7 +75,8 @@ router.post('/checkin', async (req, res) => {
 
   const companyStr  = payload.company ? ` from *${payload.company}*` : '';
   const hostMention = payload.hostSlackId ? `<@${payload.hostSlackId}>` : `*${payload.host}*`;
-  const message     = `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`;
+  const channelMsg  = `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`;
+  const dmMsg       = `:wave: Hello, you have a visitor who just checked in at the door. *${payload.firstName} ${payload.lastName}*${companyStr}.`;
 
   if (n8nUrl) {
     try {
@@ -89,7 +90,7 @@ router.post('/checkin', async (req, res) => {
     try {
       await axios.post('https://slack.com/api/chat.postMessage', {
         channel: payload.hostSlackId,
-        text:    message
+        text:    dmMsg
       }, { headers: { Authorization: `Bearer ${botToken}` } });
     } catch (err) {
       console.error('Slack DM failed:', err.message);
@@ -97,7 +98,7 @@ router.post('/checkin', async (req, res) => {
   } else if (slackUrl) {
     // Fall back to incoming webhook channel post
     try {
-      await axios.post(slackUrl, { text: message });
+      await axios.post(slackUrl, { text: channelMsg });
     } catch (err) {
       console.error('Slack notification failed:', err.message);
     }
