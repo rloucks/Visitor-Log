@@ -574,6 +574,24 @@ async function saveIntegrations() {
   }
 }
 
+async function testN8n() {
+  const msgEl = document.getElementById('n8nMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+
+  await saveIntegrations();
+
+  const res = await fetch('/api/admin/integrations/test-n8n', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'n8n responded successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
 async function testSlack() {
   const msgEl = document.getElementById('integrationMsg');
   msgEl.style.color = 'rgba(255,255,255,0.4)';

@@ -202,6 +202,10 @@
             <label class="setting-label" for="n8nWebhookUrl">Webhook URL</label>
             <input class="admin-input" id="n8nWebhookUrl" type="url" placeholder="https://n8n.anvil.ai/webhook/visitor-checkin" style="max-width:480px;" />
           </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-outline" onclick="testN8n()">Test n8n Connection</button>
+          </div>
+          <p id="n8nMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
         </div>
 
         <div class="card">

@@ -108,6 +108,25 @@ router.post('/integrations', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+router.post('/integrations/test-n8n', requireAuth, async (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'n8nWebhookUrl'").get();
+  const url = row?.value || process.env.N8N_WEBHOOK_URL;
+  if (!url) return res.status(400).json({ error: 'No n8n webhook URL configured.' });
+  try {
+    const axios = require('axios');
+    await axios.post(url, {
+      firstName: 'Test',
+      lastName:  'Visitor',
+      company:   'Admin Panel',
+      host:      'Test Host',
+      hostSlackId: ''
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `n8n returned an error: ${err.message}` });
+  }
+});
+
 router.post('/integrations/test-slack', requireAuth, async (req, res) => {
   const row = db.prepare("SELECT value FROM settings WHERE key = 'slackWebhookUrl'").get();
   const url = row?.value || process.env.SLACK_WEBHOOK_URL;
