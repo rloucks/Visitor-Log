@@ -545,11 +545,25 @@ async function deleteAdmin(id) {
 // ============================================================
 async function loadIntegrations() {
   try {
-    const res  = await fetch('/api/admin/integrations');
-    const data = await res.json();
+    const [intRes, empRes] = await Promise.all([
+      fetch('/api/admin/integrations'),
+      fetch('/api/admin/employees')
+    ]);
+    const data = await intRes.json();
     document.getElementById('n8nWebhookUrl').value   = data.n8nWebhookUrl   || '';
     document.getElementById('slackBotToken').value   = data.slackBotToken   || '';
     document.getElementById('slackWebhookUrl').value = data.slackWebhookUrl || '';
+
+    const employees = await empRes.json();
+    const sel = document.getElementById('dmTestEmployee');
+    sel.innerHTML = '<option value="">— pick an employee —</option>';
+    for (const emp of employees) {
+      const opt = document.createElement('option');
+      opt.value = emp.id;
+      opt.textContent = emp.slackUserId ? emp.name : `${emp.name} (no Slack ID)`;
+      opt.disabled = !emp.slackUserId;
+      sel.appendChild(opt);
+    }
   } catch {
     showToast('Failed to load integration settings.', 'error');
   }
@@ -573,6 +587,34 @@ async function saveIntegrations() {
     msgEl.textContent = '';
   } else {
     showToast('Failed to save.', 'error');
+  }
+}
+
+async function testSlackDm() {
+  const msgEl = document.getElementById('slackDmMsg');
+  const empId = document.getElementById('dmTestEmployee').value;
+  if (!empId) {
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = 'Please select an employee.';
+    return;
+  }
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+
+  await saveIntegrations();
+
+  const res = await fetch('/api/admin/integrations/test-slack-dm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ employeeId: empId })
+  });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test DM sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
   }
 }
 

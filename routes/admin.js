@@ -108,6 +108,34 @@ router.post('/integrations', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+router.post('/integrations/test-slack-dm', requireAuth, async (req, res) => {
+  const { employeeId } = req.body;
+  if (!employeeId) return res.status(400).json({ error: 'employeeId required.' });
+
+  const emp = db.prepare('SELECT name, slackUserId FROM employees WHERE id = ?').get(employeeId);
+  if (!emp)              return res.status(404).json({ error: 'Employee not found.' });
+  if (!emp.slackUserId)  return res.status(400).json({ error: `${emp.name} has no Slack User ID set.` });
+
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'slackBotToken'").get();
+  const token = row?.value || process.env.SLACK_BOT_TOKEN;
+  if (!token) return res.status(400).json({ error: 'No Slack Bot Token configured.' });
+
+  try {
+    const axios = require('axios');
+    const result = await axios.post('https://slack.com/api/chat.postMessage', {
+      channel: emp.slackUserId,
+      text:    `:white_check_mark: Test message from Visitor Log — your Slack DM notifications are working!`
+    }, { headers: { Authorization: `Bearer ${token}` } });
+
+    if (!result.data.ok) {
+      return res.status(502).json({ error: `Slack error: ${result.data.error}` });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Slack returned an error: ${err.message}` });
+  }
+});
+
 router.post('/integrations/test-n8n', requireAuth, async (req, res) => {
   const row = db.prepare("SELECT value FROM settings WHERE key = 'n8nWebhookUrl'").get();
   const url = row?.value || process.env.N8N_WEBHOOK_URL;

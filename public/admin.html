@@ -217,6 +217,13 @@
             <label class="setting-label" for="slackBotToken">Bot Token</label>
             <input class="admin-input" id="slackBotToken" type="password" placeholder="xoxb-..." style="max-width:480px;" />
           </div>
+          <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <select class="admin-input" id="dmTestEmployee" style="max-width:240px;">
+              <option value="">— pick an employee —</option>
+            </select>
+            <button class="btn btn-outline" onclick="testSlackDm()">Send Test DM</button>
+          </div>
+          <p id="slackDmMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
         </div>
 
         <div class="card">
