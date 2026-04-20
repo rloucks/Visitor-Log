@@ -114,13 +114,15 @@ router.post('/integrations/test-n8n', requireAuth, async (req, res) => {
   if (!url) return res.status(400).json({ error: 'No n8n webhook URL configured.' });
   try {
     const axios = require('axios');
+    const https = require('https');
+    // NOTE: rejectUnauthorized disabled temporarily — cert expired, pending renewal
     await axios.post(url, {
       firstName: 'Test',
       lastName:  'Visitor',
       company:   'Admin Panel',
       host:      'Test Host',
       hostSlackId: ''
-    });
+    }, { httpsAgent: new https.Agent({ rejectUnauthorized: false }) });
     res.json({ success: true });
   } catch (err) {
     res.status(502).json({ error: `n8n returned an error: ${err.message}` });

@@ -74,7 +74,8 @@ router.post('/checkin', async (req, res) => {
 
   if (n8nUrl) {
     try {
-      await axios.post(n8nUrl, payload);
+      // NOTE: rejectUnauthorized disabled temporarily — cert expired, pending renewal
+      await axios.post(n8nUrl, payload, { httpsAgent: new https.Agent({ rejectUnauthorized: false }) });
     } catch (err) {
       console.error('n8n webhook failed:', err.message);
     }
