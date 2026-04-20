@@ -92,7 +92,7 @@ router.post('/settings', requireAuth, (req, res) => {
 // --- Integrations (protected) ---
 
 router.get('/integrations', requireAuth, (req, res) => {
-  const keys = ['slackWebhookUrl', 'n8nWebhookUrl'];
+  const keys = ['slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken'];
   const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
     keys.map(() => '?').join(',') + ')').all(...keys);
   const result = Object.fromEntries(rows.map(r => [r.key, r.value || '']));
@@ -100,7 +100,7 @@ router.get('/integrations', requireAuth, (req, res) => {
 });
 
 router.post('/integrations', requireAuth, (req, res) => {
-  const allowed = ['slackWebhookUrl', 'n8nWebhookUrl'];
+  const allowed = ['slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken'];
   const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
   for (const key of allowed) {
     if (req.body[key] !== undefined) stmt.run(key, req.body[key] || '');

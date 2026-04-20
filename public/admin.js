@@ -548,6 +548,7 @@ async function loadIntegrations() {
     const res  = await fetch('/api/admin/integrations');
     const data = await res.json();
     document.getElementById('n8nWebhookUrl').value   = data.n8nWebhookUrl   || '';
+    document.getElementById('slackBotToken').value   = data.slackBotToken   || '';
     document.getElementById('slackWebhookUrl').value = data.slackWebhookUrl || '';
   } catch {
     showToast('Failed to load integration settings.', 'error');
@@ -556,13 +557,14 @@ async function loadIntegrations() {
 
 async function saveIntegrations() {
   const n8nWebhookUrl   = document.getElementById('n8nWebhookUrl').value.trim();
+  const slackBotToken   = document.getElementById('slackBotToken').value.trim();
   const slackWebhookUrl = document.getElementById('slackWebhookUrl').value.trim();
   const msgEl = document.getElementById('integrationMsg');
 
   const res = await fetch('/api/admin/integrations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ n8nWebhookUrl, slackWebhookUrl })
+    body: JSON.stringify({ n8nWebhookUrl, slackBotToken, slackWebhookUrl })
   });
 
   if (res.ok) {

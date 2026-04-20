@@ -209,9 +209,20 @@
         </div>
 
         <div class="card">
-          <h3>Slack Direct Webhook</h3>
+          <h3>Slack Bot Token</h3>
           <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
-            Fallback used only when no n8n webhook is configured. Posts a single message to one channel.
+            When set, visitors are announced by DMing the host directly. Requires a Slack User ID on the employee record. Takes priority over the channel webhook below.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="slackBotToken">Bot Token</label>
+            <input class="admin-input" id="slackBotToken" type="password" placeholder="xoxb-..." style="max-width:480px;" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Slack Channel Webhook</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Fallback when no bot token is configured, or when the host has no Slack User ID. Posts to a channel.
           </p>
           <div class="setting-row">
             <label class="setting-label" for="slackWebhookUrl">Incoming Webhook URL</label>

@@ -69,8 +69,13 @@ router.post('/checkin', async (req, res) => {
 
   // Read webhook URLs from DB settings, fall back to env vars
   const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
-  const n8nUrl   = getSetting('n8nWebhookUrl')   || process.env.N8N_WEBHOOK_URL   || '';
-  const slackUrl = getSetting('slackWebhookUrl') || process.env.SLACK_WEBHOOK_URL || '';
+  const n8nUrl      = getSetting('n8nWebhookUrl')   || process.env.N8N_WEBHOOK_URL   || '';
+  const slackUrl    = getSetting('slackWebhookUrl') || process.env.SLACK_WEBHOOK_URL || '';
+  const botToken    = getSetting('slackBotToken')   || process.env.SLACK_BOT_TOKEN   || '';
+
+  const companyStr  = payload.company ? ` from *${payload.company}*` : '';
+  const hostMention = payload.hostSlackId ? `<@${payload.hostSlackId}>` : `*${payload.host}*`;
+  const message     = `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`;
 
   if (n8nUrl) {
     try {
@@ -79,13 +84,20 @@ router.post('/checkin', async (req, res) => {
     } catch (err) {
       console.error('n8n webhook failed:', err.message);
     }
-  } else if (slackUrl) {
+  } else if (botToken && payload.hostSlackId) {
+    // DM the host directly via Slack API
     try {
-      const companyStr = payload.company ? ` from *${payload.company}*` : '';
-      const hostMention = payload.hostSlackId ? `<@${payload.hostSlackId}>` : `*${payload.host}*`;
-      await axios.post(slackUrl, {
-        text: `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`
-      });
+      await axios.post('https://slack.com/api/chat.postMessage', {
+        channel: payload.hostSlackId,
+        text:    message
+      }, { headers: { Authorization: `Bearer ${botToken}` } });
+    } catch (err) {
+      console.error('Slack DM failed:', err.message);
+    }
+  } else if (slackUrl) {
+    // Fall back to incoming webhook channel post
+    try {
+      await axios.post(slackUrl, { text: message });
     } catch (err) {
       console.error('Slack notification failed:', err.message);
     }
