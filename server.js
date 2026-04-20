@@ -6,7 +6,8 @@ const path = require('path');
 const fs = require('fs');
 
 const visitorRoutes = require('./routes/visitor');
-const adminRoutes = require('./routes/admin');
+const adminRoutes   = require('./routes/admin');
+const scheduler     = require('./lib/scheduler');
 
 const app = express();
 
@@ -34,6 +35,8 @@ app.use(session({
 
 app.use('/api/visitor', visitorRoutes);
 app.use('/api/admin', adminRoutes);
+
+scheduler.start();
 
 const PORT    = process.env.PORT || 3000;
 const keyPath  = path.join(__dirname, 'certs', 'key.pem');

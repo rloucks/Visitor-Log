@@ -550,9 +550,17 @@ async function loadIntegrations() {
       fetch('/api/admin/employees')
     ]);
     const data = await intRes.json();
-    document.getElementById('n8nWebhookUrl').value   = data.n8nWebhookUrl   || '';
-    document.getElementById('slackBotToken').value   = data.slackBotToken   || '';
-    document.getElementById('slackWebhookUrl').value = data.slackWebhookUrl || '';
+    document.getElementById('n8nWebhookUrl').value      = data.n8nWebhookUrl      || '';
+    document.getElementById('slackBotToken').value      = data.slackBotToken      || '';
+    document.getElementById('slackWebhookUrl').value    = data.slackWebhookUrl    || '';
+    document.getElementById('backupEmailEnabled').checked = data.backupEmailEnabled === '1';
+    document.getElementById('backupEmailTo').value      = data.backupEmailTo      || '';
+    document.getElementById('backupEmailFrom').value    = data.backupEmailFrom    || '';
+    document.getElementById('smtpHost').value           = data.smtpHost           || '';
+    document.getElementById('smtpPort').value           = data.smtpPort           || '';
+    document.getElementById('smtpUser').value           = data.smtpUser           || '';
+    document.getElementById('smtpPass').value           = data.smtpPass           || '';
+    document.getElementById('smtpSecure').checked       = data.smtpSecure         === '1';
 
     const employees = await empRes.json();
     const sel = document.getElementById('dmTestEmployee');
@@ -570,15 +578,27 @@ async function loadIntegrations() {
 }
 
 async function saveIntegrations() {
-  const n8nWebhookUrl   = document.getElementById('n8nWebhookUrl').value.trim();
-  const slackBotToken   = document.getElementById('slackBotToken').value.trim();
-  const slackWebhookUrl = document.getElementById('slackWebhookUrl').value.trim();
+  const n8nWebhookUrl      = document.getElementById('n8nWebhookUrl').value.trim();
+  const slackBotToken      = document.getElementById('slackBotToken').value.trim();
+  const slackWebhookUrl    = document.getElementById('slackWebhookUrl').value.trim();
+  const backupEmailEnabled = document.getElementById('backupEmailEnabled').checked ? '1' : '0';
+  const backupEmailTo      = document.getElementById('backupEmailTo').value.trim();
+  const backupEmailFrom    = document.getElementById('backupEmailFrom').value.trim();
+  const smtpHost           = document.getElementById('smtpHost').value.trim();
+  const smtpPort           = document.getElementById('smtpPort').value.trim();
+  const smtpUser           = document.getElementById('smtpUser').value.trim();
+  const smtpPass           = document.getElementById('smtpPass').value.trim();
+  const smtpSecure         = document.getElementById('smtpSecure').checked ? '1' : '0';
   const msgEl = document.getElementById('integrationMsg');
 
   const res = await fetch('/api/admin/integrations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ n8nWebhookUrl, slackBotToken, slackWebhookUrl })
+    body: JSON.stringify({
+      n8nWebhookUrl, slackBotToken, slackWebhookUrl,
+      backupEmailEnabled, backupEmailTo, backupEmailFrom,
+      smtpHost, smtpPort, smtpUser, smtpPass, smtpSecure
+    })
   });
 
   if (res.ok) {
@@ -587,6 +607,38 @@ async function saveIntegrations() {
     msgEl.textContent = '';
   } else {
     showToast('Failed to save.', 'error');
+  }
+}
+
+async function testBackupEmail() {
+  const msgEl = document.getElementById('backupMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/test-email', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test email sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
+async function runBackupNow() {
+  const msgEl = document.getElementById('backupMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Running…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/run-backup', { method: 'POST' });
+  const d   = await res.json();
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = d.message || 'Backup complete.';
+  } else {
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Backup failed.';
   }
 }
 

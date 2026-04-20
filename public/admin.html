@@ -241,6 +241,64 @@
           </div>
           <p id="integrationMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
         </div>
+
+        <div class="card">
+          <h3>Backups &amp; Email</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            A CSV of each day's visitors is saved automatically at midnight. Records older than 365 days are purged automatically.
+          </p>
+
+          <div class="setting-row">
+            <label class="setting-label">Email Backup</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="backupEmailEnabled" />
+              <span style="font-size:0.88rem;">Email the daily CSV automatically</span>
+            </label>
+          </div>
+
+          <div id="backupEmailFields">
+            <div class="setting-row" style="margin-top:12px;">
+              <label class="setting-label" for="backupEmailTo">Send To</label>
+              <input class="admin-input" id="backupEmailTo" type="email" placeholder="logs@yourcompany.com" style="max-width:340px;" />
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="backupEmailFrom">Send From</label>
+              <input class="admin-input" id="backupEmailFrom" type="email" placeholder="visitor-log@yourcompany.com" style="max-width:340px;" />
+            </div>
+
+            <h4 style="margin:18px 0 10px;font-size:0.85rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.05em;">SMTP</h4>
+            <div class="setting-row">
+              <label class="setting-label" for="smtpHost">Host</label>
+              <input class="admin-input" id="smtpHost" type="text" placeholder="smtp.yourprovider.com" style="max-width:340px;" />
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="smtpPort">Port</label>
+              <input class="admin-input" id="smtpPort" type="number" placeholder="587" style="max-width:100px;" />
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="smtpUser">Username</label>
+              <input class="admin-input" id="smtpUser" type="text" placeholder="you@yourprovider.com" style="max-width:340px;" />
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="smtpPass">Password</label>
+              <input class="admin-input" id="smtpPass" type="password" placeholder="••••••••" style="max-width:340px;" />
+            </div>
+            <div class="setting-row">
+              <label class="setting-label">TLS</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="smtpSecure" />
+                <span style="font-size:0.88rem;">Use TLS (port 465)</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-white"    onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline"  onclick="testBackupEmail()">Test Email</button>
+            <button class="btn btn-outline"  onclick="runBackupNow()">Run Backup Now</button>
+          </div>
+          <p id="backupMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
       </section>
 
       <!-- Settings -->

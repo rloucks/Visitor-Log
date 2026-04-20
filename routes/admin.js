@@ -91,21 +91,67 @@ router.post('/settings', requireAuth, (req, res) => {
 
 // --- Integrations (protected) ---
 
+const INTEGRATION_KEYS = [
+  'slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken',
+  'backupEmailEnabled', 'backupEmailTo', 'backupEmailFrom',
+  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure'
+];
+
 router.get('/integrations', requireAuth, (req, res) => {
-  const keys = ['slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken'];
   const rows = db.prepare('SELECT key, value FROM settings WHERE key IN (' +
-    keys.map(() => '?').join(',') + ')').all(...keys);
+    INTEGRATION_KEYS.map(() => '?').join(',') + ')').all(...INTEGRATION_KEYS);
   const result = Object.fromEntries(rows.map(r => [r.key, r.value || '']));
   res.json(result);
 });
 
 router.post('/integrations', requireAuth, (req, res) => {
-  const allowed = ['slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken'];
   const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
-  for (const key of allowed) {
+  for (const key of INTEGRATION_KEYS) {
     if (req.body[key] !== undefined) stmt.run(key, req.body[key] || '');
   }
   res.json({ success: true });
+});
+
+router.post('/integrations/run-backup', requireAuth, async (req, res) => {
+  try {
+    const { runBackupForDate, sendEmail } = require('../lib/scheduler');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const result  = await runBackupForDate(dateStr);
+    if (!result) return res.json({ success: true, message: 'No visitors today — nothing to back up.' });
+
+    const emailEnabled = db.prepare("SELECT value FROM settings WHERE key = 'backupEmailEnabled'").get()?.value === '1';
+    if (emailEnabled) {
+      await sendEmail(result.filepath, result.filename, dateStr, result.count);
+    }
+    res.json({ success: true, message: `Backed up ${result.count} record(s) to ${result.filename}.${emailEnabled ? ' Email sent.' : ''}` });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.post('/integrations/test-email', requireAuth, async (req, res) => {
+  const row   = db.prepare("SELECT value FROM settings WHERE key = 'backupEmailTo'").get();
+  const emailTo = row?.value;
+  if (!emailTo) return res.status(400).json({ error: 'No recipient email configured.' });
+  try {
+    const nodemailer = require('nodemailer');
+    const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+    const transporter = nodemailer.createTransport({
+      host:   getSetting('smtpHost'),
+      port:   parseInt(getSetting('smtpPort') || '587', 10),
+      secure: getSetting('smtpSecure') === '1',
+      auth:   getSetting('smtpUser') ? { user: getSetting('smtpUser'), pass: getSetting('smtpPass') } : undefined
+    });
+    await transporter.sendMail({
+      from:    getSetting('backupEmailFrom') || getSetting('smtpUser'),
+      to:      emailTo,
+      subject: 'Visitor Log — Email Test',
+      text:    'Your email notifications for Visitor Log backups are working correctly.'
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 router.post('/integrations/test-slack-dm', requireAuth, async (req, res) => {
