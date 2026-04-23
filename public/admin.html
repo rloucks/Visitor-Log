@@ -58,6 +58,18 @@
           </div>
           <button class="btn btn-white" onclick="checkConnectivity()">Run Check</button>
         </div>
+
+        <div class="card">
+          <h3>Kiosk Control</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Force all connected kiosk screens to reload instantly.
+          </p>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <button class="btn btn-white" onclick="refreshKiosk()">Refresh Kiosk</button>
+            <span id="kioskConnected" style="font-size:0.82rem;color:rgba(255,255,255,0.35);"></span>
+          </div>
+          <p id="kioskRefreshMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
       </section>
 
       <!-- Visitor Log -->

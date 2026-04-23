@@ -57,8 +57,38 @@ function showSection(name) {
 }
 
 // ============================================================
-// System Status
+// System Status & Kiosk Control
 // ============================================================
+async function refreshKiosk() {
+  const msgEl = document.getElementById('kioskRefreshMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  try {
+    const res  = await fetch('/api/admin/kiosk/refresh', { method: 'POST' });
+    const data = await res.json();
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = data.sent > 0
+      ? `Refresh sent to ${data.sent} kiosk${data.sent !== 1 ? 's' : ''}.`
+      : 'No kiosks currently connected.';
+  } catch {
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = 'Failed to send refresh.';
+  }
+}
+
+async function updateKioskCount() {
+  try {
+    const res  = await fetch('/api/admin/kiosk/status');
+    const data = await res.json();
+    const el   = document.getElementById('kioskConnected');
+    if (el) el.textContent = `${data.connected} kiosk${data.connected !== 1 ? 's' : ''} connected`;
+  } catch {}
+}
+
+// Poll kiosk connection count every 10 s while admin is open
+setInterval(updateKioskCount, 10000);
+updateKioskCount();
+
 async function checkConnectivity() {
   const ids = ['st-server', 'st-database', 'st-slack'];
   ids.forEach(id => {

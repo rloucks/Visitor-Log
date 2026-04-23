@@ -15,8 +15,22 @@ let   timeServerOffset = 0; // ms difference between API server time and local D
 document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings(); // starts clock, reads photoCapture setting
   bindInactivity();
+  connectSSE();
   // initCamera() is called inside loadSettings() only when photoCapture === '1'
 });
+
+// ============================================================
+// Server-Sent Events — remote commands from admin panel
+// ============================================================
+function connectSSE() {
+  const es = new EventSource('/api/visitor/events');
+  es.addEventListener('refresh', () => window.location.reload());
+  es.onerror = () => {
+    es.close();
+    // Reconnect after 5 s if the connection drops
+    setTimeout(connectSSE, 5000);
+  };
+}
 
 // ============================================================
 // Clock
@@ -632,17 +646,7 @@ async function startCheckin() {
     if (data.eventMode) { loadEventScreen(data); return; }
   } catch {}
 
-  // Check for pending expected guests
-  try {
-    const res    = await fetch('/api/visitor/expected-guests');
-    const guests = await res.json();
-    if (guests.length > 0) {
-      showExpectedGuests(guests);
-      return;
-    }
-  } catch {}
-
-  // No expected guests — go straight to letter picker
+  // Go straight to letter picker
   await showLetterPickerScreen();
 }
 
@@ -663,16 +667,20 @@ function showExpectedGuests(guests) {
   resetInactivityTimer();
 }
 
+function goToVisitorDetails() {
+  document.getElementById('hostDisplay').textContent = selectedHost;
+  document.getElementById('returningBadge').classList.add('hidden');
+  showScreen('step2');
+  document.getElementById('firstName').focus();
+  resetInactivityTimer();
+}
+
 function selectExpectedGuest(g) {
   expectedGuestId = g.id;
-  selectedHost    = g.host;
   document.getElementById('firstName').value = g.firstName;
   document.getElementById('lastName').value  = g.lastName;
   document.getElementById('company').value   = g.company || '';
-  document.getElementById('hostDisplay').textContent = g.host;
-  document.getElementById('returningBadge').classList.add('hidden');
-  showScreen('step2');
-  resetInactivityTimer();
+  goToVisitorDetails();
 }
 
 async function showLetterPickerScreen() {
@@ -866,12 +874,22 @@ function fmtEventStay(h, m) {
   return `${h}h ${m}m`;
 }
 
-function selectEmployee(name) {
+async function selectEmployee(name) {
   selectedHost = name;
-  document.getElementById('hostDisplay').textContent = name;
-  showScreen('step2');
-  document.getElementById('firstName').focus();
   resetInactivityTimer();
+
+  // Check for expected guests for this specific host
+  try {
+    const res    = await fetch(`/api/visitor/expected-guests?host=${encodeURIComponent(name)}`);
+    const guests = await res.json();
+    if (guests.length > 0) {
+      showExpectedGuests(guests);
+      return;
+    }
+  } catch {}
+
+  // No expected guests — go straight to visitor details
+  goToVisitorDetails();
 }
 
 // ============================================================

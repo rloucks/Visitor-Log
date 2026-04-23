@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('../db');
+const sse = require('../lib/sse');
 
 const router = express.Router();
 
@@ -16,6 +17,27 @@ const photoUpload = multer({
 
 const photosDir = path.join(__dirname, '..', 'uploads', 'photos');
 if (!fs.existsSync(photosDir)) fs.mkdirSync(photosDir, { recursive: true });
+
+// Server-Sent Events — kiosk listens here for remote commands (e.g. refresh)
+router.get('/events', (req, res) => {
+  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection',    'keep-alive');
+  res.flushHeaders();
+
+  // Initial heartbeat so the browser doesn't time out immediately
+  res.write(':connected\n\n');
+
+  sse.addClient(res);
+
+  // Keep-alive ping every 25 s (iOS Safari closes idle SSE after ~30 s)
+  const ping = setInterval(() => { try { res.write(':ping\n\n'); } catch {} }, 25000);
+
+  req.on('close', () => {
+    clearInterval(ping);
+    sse.removeClient(res);
+  });
+});
 
 // Employee list for the kiosk dropdown
 router.get('/employees', (req, res) => {
@@ -39,11 +61,12 @@ router.get('/returning', (req, res) => {
   res.json(visitor || null);
 });
 
-// Expected guests — only pending (not yet checked in)
+// Expected guests — only pending (not yet checked in), optionally filtered by host
 router.get('/expected-guests', (req, res) => {
-  const guests = db.prepare(
-    'SELECT * FROM expected_guests WHERE checkedIn = 0 ORDER BY createdAt ASC'
-  ).all();
+  const { host } = req.query;
+  const guests = host
+    ? db.prepare('SELECT * FROM expected_guests WHERE checkedIn = 0 AND LOWER(host) = LOWER(?) ORDER BY createdAt ASC').all(host)
+    : db.prepare('SELECT * FROM expected_guests WHERE checkedIn = 0 ORDER BY createdAt ASC').all();
   res.json(guests);
 });
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const sse = require('../lib/sse');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -227,6 +228,17 @@ router.post('/logo', requireAuth, upload.single('logo'), (req, res) => {
 
 router.get('/health', (req, res) => {
   res.json({ server: 'OK', database: 'OK' });
+});
+
+// --- Kiosk remote control ---
+
+router.get('/kiosk/status', requireAuth, (req, res) => {
+  res.json({ connected: sse.clientCount() });
+});
+
+router.post('/kiosk/refresh', requireAuth, (req, res) => {
+  sse.broadcast('refresh', {});
+  res.json({ success: true, sent: sse.clientCount() });
 });
 
 // --- Connectivity ---

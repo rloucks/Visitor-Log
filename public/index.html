@@ -41,12 +41,12 @@
   <div id="step0" class="screen">
     <div class="form-card">
       <div class="step-header">
-        <button class="btn-back" onclick="goIdle()">← Back</button>
+        <button class="btn-back" onclick="showScreen('step1')">← Back</button>
       </div>
       <h2>Are you expected?</h2>
       <p class="step-hint">Select your name below, or tap <strong>Other Guest</strong> to continue.</p>
       <div id="expectedGuestList" class="expected-guest-list"></div>
-      <button class="btn-other-guest" onclick="showLetterPickerScreen()">Other Guest →</button>
+      <button class="btn-other-guest" onclick="goToVisitorDetails()">Other Guest →</button>
     </div>
   </div>
 
