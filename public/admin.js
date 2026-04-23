@@ -35,6 +35,7 @@ async function doLogout() {
 const sectionLoaders = {
   status:       () => {},
   visitors:     loadVisitors,
+  expected:     loadExpectedGuests,
   employees:    loadEmployees,
   admins:       loadAdmins,
   integrations: loadIntegrations,
@@ -550,9 +551,10 @@ async function loadIntegrations() {
       fetch('/api/admin/employees')
     ]);
     const data = await intRes.json();
-    document.getElementById('n8nWebhookUrl').value      = data.n8nWebhookUrl      || '';
-    document.getElementById('slackBotToken').value      = data.slackBotToken      || '';
-    document.getElementById('slackWebhookUrl').value    = data.slackWebhookUrl    || '';
+    document.getElementById('n8nWebhookUrl').value         = data.n8nWebhookUrl      || '';
+    document.getElementById('slackBotToken').value         = data.slackBotToken      || '';
+    document.getElementById('slackWebhookUrl').value       = data.slackWebhookUrl    || '';
+    document.getElementById('slackChannelEnabled').checked = data.slackChannelEnabled === '1';
     document.getElementById('backupEmailEnabled').checked = data.backupEmailEnabled === '1';
     document.getElementById('backupEmailTo').value      = data.backupEmailTo      || '';
     document.getElementById('backupEmailFrom').value    = data.backupEmailFrom    || '';
@@ -581,6 +583,7 @@ async function saveIntegrations() {
   const n8nWebhookUrl      = document.getElementById('n8nWebhookUrl').value.trim();
   const slackBotToken      = document.getElementById('slackBotToken').value.trim();
   const slackWebhookUrl    = document.getElementById('slackWebhookUrl').value.trim();
+  const slackChannelEnabled = document.getElementById('slackChannelEnabled').checked ? '1' : '0';
   const backupEmailEnabled = document.getElementById('backupEmailEnabled').checked ? '1' : '0';
   const backupEmailTo      = document.getElementById('backupEmailTo').value.trim();
   const backupEmailFrom    = document.getElementById('backupEmailFrom').value.trim();
@@ -595,7 +598,7 @@ async function saveIntegrations() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      n8nWebhookUrl, slackBotToken, slackWebhookUrl,
+      n8nWebhookUrl, slackBotToken, slackWebhookUrl, slackChannelEnabled,
       backupEmailEnabled, backupEmailTo, backupEmailFrom,
       smtpHost, smtpPort, smtpUser, smtpPass, smtpSecure
     })
@@ -705,6 +708,88 @@ async function testSlack() {
     msgEl.style.color = '#e05555';
     msgEl.textContent = d.error || 'Test failed.';
   }
+}
+
+// ============================================================
+// Expected Guests
+// ============================================================
+async function loadExpectedGuests() {
+  try {
+    const [guestRes, empRes] = await Promise.all([
+      fetch('/api/admin/expected-guests'),
+      fetch('/api/admin/employees')
+    ]);
+    const guests    = await guestRes.json();
+    const employees = await empRes.json();
+
+    // Populate host dropdown
+    const sel = document.getElementById('egHost');
+    sel.innerHTML = '<option value="">— Visiting —</option>';
+    employees.forEach(emp => {
+      const opt = document.createElement('option');
+      opt.value = emp.name; opt.textContent = emp.name;
+      sel.appendChild(opt);
+    });
+
+    // Render table
+    const tbody = document.querySelector('#expectedGuestTable tbody');
+    tbody.innerHTML = '';
+    if (!guests.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:24px;">No expected guests.</td></tr>';
+      return;
+    }
+    guests.forEach(g => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(g.firstName)} ${esc(g.lastName)}</td>
+        <td>${esc(g.company || '—')}</td>
+        <td>${esc(g.host)}</td>
+        <td><span style="color:${g.checkedIn ? '#4caf82' : 'rgba(255,255,255,0.4)'};">${g.checkedIn ? 'Checked In ✓' : 'Pending'}</span></td>
+        <td></td>
+      `;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger btn-sm';
+      delBtn.textContent = 'Remove';
+      delBtn.addEventListener('click', () => deleteExpectedGuest(g.id));
+      tr.querySelector('td:last-child').appendChild(delBtn);
+      tbody.appendChild(tr);
+    });
+  } catch {
+    showToast('Failed to load expected guests.', 'error');
+  }
+}
+
+async function addExpectedGuest() {
+  const firstName = document.getElementById('egFirstName').value.trim();
+  const lastName  = document.getElementById('egLastName').value.trim();
+  const company   = document.getElementById('egCompany').value.trim();
+  const host      = document.getElementById('egHost').value;
+
+  if (!firstName || !lastName || !host) {
+    showToast('First name, last name, and host are required.', 'error');
+    return;
+  }
+
+  const res = await fetch('/api/admin/expected-guests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ firstName, lastName, company, host })
+  });
+
+  if (res.ok) {
+    ['egFirstName','egLastName','egCompany'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('egHost').value = '';
+    showToast('Expected guest added.');
+    loadExpectedGuests();
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Failed to add guest.', 'error');
+  }
+}
+
+async function deleteExpectedGuest(id) {
+  await fetch(`/api/admin/expected-guests/${id}`, { method: 'DELETE' });
+  loadExpectedGuests();
 }
 
 // ============================================================

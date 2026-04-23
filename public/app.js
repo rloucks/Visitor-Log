@@ -578,7 +578,8 @@ function showScreen(id) {
 }
 
 function goIdle() {
-  selectedHost = '';
+  selectedHost    = '';
+  expectedGuestId = null;
   document.getElementById('firstName').value = '';
   document.getElementById('lastName').value  = '';
   document.getElementById('company').value   = '';
@@ -616,9 +617,10 @@ function clearInactivityTimer() {
 }
 
 // ============================================================
-// Step 1 — Select Host  (or route to Event Mode)
+// Step 0 / Step 1 — Expected Guests → Letter Picker
 // ============================================================
-let allEmployees = [];
+let allEmployees    = [];
+let expectedGuestId = null;
 
 async function startCheckin() {
   resetInactivityTimer();
@@ -627,13 +629,54 @@ async function startCheckin() {
   try {
     const res  = await fetch('/api/visitor/event');
     const data = await res.json();
-    if (data.eventMode) {
-      loadEventScreen(data);
+    if (data.eventMode) { loadEventScreen(data); return; }
+  } catch {}
+
+  // Check for pending expected guests
+  try {
+    const res    = await fetch('/api/visitor/expected-guests');
+    const guests = await res.json();
+    if (guests.length > 0) {
+      showExpectedGuests(guests);
       return;
     }
   } catch {}
 
-  // Normal mode — show letter picker
+  // No expected guests — go straight to letter picker
+  await showLetterPickerScreen();
+}
+
+function showExpectedGuests(guests) {
+  const container = document.getElementById('expectedGuestList');
+  container.innerHTML = '';
+  guests.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-expected-guest';
+    btn.innerHTML =
+      `<span class="eg-name">${htmlEsc(g.firstName)} ${htmlEsc(g.lastName)}</span>` +
+      (g.company ? `<span class="eg-detail">${htmlEsc(g.company)}</span>` : '') +
+      `<span class="eg-detail">Here for ${htmlEsc(g.host)}</span>`;
+    btn.addEventListener('click', () => selectExpectedGuest(g));
+    container.appendChild(btn);
+  });
+  showScreen('step0');
+  resetInactivityTimer();
+}
+
+function selectExpectedGuest(g) {
+  expectedGuestId = g.id;
+  selectedHost    = g.host;
+  document.getElementById('firstName').value = g.firstName;
+  document.getElementById('lastName').value  = g.lastName;
+  document.getElementById('company').value   = g.company || '';
+  document.getElementById('hostDisplay').textContent = g.host;
+  document.getElementById('returningBadge').classList.add('hidden');
+  showScreen('step2');
+  resetInactivityTimer();
+}
+
+async function showLetterPickerScreen() {
+  expectedGuestId = null;
   showScreen('step1');
   document.getElementById('letterPicker').innerHTML = '';
   document.getElementById('employeeList').innerHTML = '';
@@ -641,13 +684,11 @@ async function startCheckin() {
   try {
     const res    = await fetch('/api/visitor/employees');
     allEmployees = await res.json();
-
     if (!allEmployees.length) {
       document.getElementById('letterPicker').innerHTML =
         '<p style="color:rgba(255,255,255,0.4);text-align:center;">No employees configured.</p>';
       return;
     }
-
     buildLetterPicker();
   } catch {
     document.getElementById('letterPicker').innerHTML =
@@ -884,7 +925,7 @@ async function submitForm() {
     const res = await fetch('/api/visitor/checkin', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ firstName, lastName, company, host: selectedHost, stayHours, stayMinutes })
+      body:    JSON.stringify({ firstName, lastName, company, host: selectedHost, stayHours, stayMinutes, expectedGuestId })
     });
 
     if (!res.ok) throw new Error('Check-in failed');

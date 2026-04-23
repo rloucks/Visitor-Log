@@ -56,6 +56,18 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS expected_guests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    company TEXT,
+    host TEXT NOT NULL,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    checkedIn INTEGER DEFAULT 0
+  )
+`).run();
+
 // Default per-effect Vanta options (stored as JSON string)
 const defaultVantaOptions = JSON.stringify({
   NET:    { color: '#ffffff', backgroundColor: '#000000', points: 8,   maxDistance: 25,  spacing: 20, speed: 1.5 },

@@ -39,9 +39,17 @@ router.get('/returning', (req, res) => {
   res.json(visitor || null);
 });
 
+// Expected guests — only pending (not yet checked in)
+router.get('/expected-guests', (req, res) => {
+  const guests = db.prepare(
+    'SELECT * FROM expected_guests WHERE checkedIn = 0 ORDER BY createdAt ASC'
+  ).all();
+  res.json(guests);
+});
+
 // Check-in
 router.post('/checkin', async (req, res) => {
-  const { firstName, lastName, company, host } = req.body;
+  const { firstName, lastName, company, host, expectedGuestId } = req.body;
 
   if (!firstName?.trim() || !lastName?.trim() || !host?.trim()) {
     return res.status(400).json({ error: 'First name, last name, and host are required.' });
@@ -54,6 +62,11 @@ router.post('/checkin', async (req, res) => {
     INSERT INTO visitors (firstName, lastName, company, host, stayHours, stayMinutes)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim(), stayHours, stayMinutes);
+
+  // Mark expected guest as checked in
+  if (expectedGuestId) {
+    db.prepare('UPDATE expected_guests SET checkedIn = 1 WHERE id = ?').run(expectedGuestId);
+  }
 
   // Look up the host's Slack user ID from employees table
   const employee = db.prepare('SELECT slackUserId FROM employees WHERE LOWER(name) = LOWER(?)').get(host.trim());
@@ -94,6 +107,14 @@ router.post('/checkin', async (req, res) => {
       }, { headers: { Authorization: `Bearer ${botToken}` } });
     } catch (err) {
       console.error('Slack DM failed:', err.message);
+    }
+    // Also post to channel if enabled
+    if (getSetting('slackChannelEnabled') === '1' && slackUrl) {
+      try {
+        await axios.post(slackUrl, { text: channelMsg });
+      } catch (err) {
+        console.error('Slack channel notify failed:', err.message);
+      }
     }
   } else if (slackUrl) {
     // Fall back to incoming webhook channel post

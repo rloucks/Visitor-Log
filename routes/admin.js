@@ -92,7 +92,7 @@ router.post('/settings', requireAuth, (req, res) => {
 // --- Integrations (protected) ---
 
 const INTEGRATION_KEYS = [
-  'slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken',
+  'slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken', 'slackChannelEnabled',
   'backupEmailEnabled', 'backupEmailTo', 'backupEmailFrom',
   'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure'
 ];
@@ -368,6 +368,33 @@ router.delete('/event-visitors/:id', requireAuth, (req, res) => {
 
 router.delete('/event-visitors', requireAuth, (req, res) => {
   db.prepare('DELETE FROM event_visitors').run();
+  res.json({ success: true });
+});
+
+// --- Expected Guests ---
+
+router.get('/expected-guests', requireAuth, (req, res) => {
+  res.json(db.prepare('SELECT * FROM expected_guests ORDER BY createdAt ASC').all());
+});
+
+router.post('/expected-guests', requireAuth, (req, res) => {
+  const { firstName, lastName, company, host } = req.body;
+  if (!firstName?.trim() || !lastName?.trim() || !host?.trim()) {
+    return res.status(400).json({ error: 'First name, last name, and host are required.' });
+  }
+  const result = db.prepare(
+    'INSERT INTO expected_guests (firstName, lastName, company, host) VALUES (?, ?, ?, ?)'
+  ).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim());
+  res.json({ success: true, id: result.lastInsertRowid });
+});
+
+router.delete('/expected-guests/:id', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM expected_guests WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+router.delete('/expected-guests', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM expected_guests').run();
   res.json({ success: true });
 });
 

@@ -37,6 +37,19 @@
     </div>
   </div>
 
+  <!-- Step 0: Expected Guests (shown only when guests are pending) -->
+  <div id="step0" class="screen">
+    <div class="form-card">
+      <div class="step-header">
+        <button class="btn-back" onclick="goIdle()">← Back</button>
+      </div>
+      <h2>Are you expected?</h2>
+      <p class="step-hint">Select your name below, or tap <strong>Other Guest</strong> to continue.</p>
+      <div id="expectedGuestList" class="expected-guest-list"></div>
+      <button class="btn-other-guest" onclick="showLetterPickerScreen()">Other Guest →</button>
+    </div>
+  </div>
+
   <!-- Step 1: Select Host -->
   <div id="step1" class="screen">
     <div class="form-card">
