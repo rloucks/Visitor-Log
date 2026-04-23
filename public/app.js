@@ -618,6 +618,8 @@ function clearInactivityTimer() {
 // ============================================================
 // Step 1 — Select Host  (or route to Event Mode)
 // ============================================================
+let allEmployees = [];
+
 async function startCheckin() {
   resetInactivityTimer();
 
@@ -631,31 +633,59 @@ async function startCheckin() {
     }
   } catch {}
 
-  // Normal mode
+  // Normal mode — show letter picker
   showScreen('step1');
-  const select = document.getElementById('employeeSelect');
-  select.innerHTML = '<option value="">Loading…</option>';
+  document.getElementById('letterPicker').innerHTML = '';
+  document.getElementById('employeeList').innerHTML = '';
 
   try {
-    const res       = await fetch('/api/visitor/employees');
-    const employees = await res.json();
+    const res    = await fetch('/api/visitor/employees');
+    allEmployees = await res.json();
 
-    select.innerHTML = '<option value="">— Select an employee —</option>';
-
-    if (!employees.length) {
-      select.innerHTML = '<option value="" disabled>No employees configured</option>';
+    if (!allEmployees.length) {
+      document.getElementById('letterPicker').innerHTML =
+        '<p style="color:rgba(255,255,255,0.4);text-align:center;">No employees configured.</p>';
       return;
     }
 
-    employees.forEach(emp => {
-      const opt = document.createElement('option');
-      opt.value       = emp.name;
-      opt.textContent = emp.name;
-      select.appendChild(opt);
-    });
+    buildLetterPicker();
   } catch {
-    select.innerHTML = '<option value="" disabled>Failed to load employees</option>';
+    document.getElementById('letterPicker').innerHTML =
+      '<p style="color:rgba(255,255,255,0.4);text-align:center;">Failed to load employees.</p>';
   }
+}
+
+function buildLetterPicker() {
+  const letters   = [...new Set(allEmployees.map(e => e.name[0].toUpperCase()))].sort();
+  const container = document.getElementById('letterPicker');
+  container.innerHTML = '';
+  letters.forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className   = 'btn-letter';
+    btn.textContent = letter;
+    btn.addEventListener('click', () => selectLetter(letter, btn));
+    container.appendChild(btn);
+  });
+}
+
+function selectLetter(letter, activeBtn) {
+  resetInactivityTimer();
+
+  // Highlight active letter
+  document.querySelectorAll('.btn-letter').forEach(b => b.classList.remove('active'));
+  activeBtn.classList.add('active');
+
+  // Show matching employees
+  const filtered  = allEmployees.filter(e => e.name[0].toUpperCase() === letter);
+  const container = document.getElementById('employeeList');
+  container.innerHTML = '';
+  filtered.forEach(emp => {
+    const btn = document.createElement('button');
+    btn.className   = 'btn-employee';
+    btn.textContent = emp.name;
+    btn.addEventListener('click', () => selectEmployee(emp.name));
+    container.appendChild(btn);
+  });
 }
 
 // ============================================================
@@ -795,10 +825,7 @@ function fmtEventStay(h, m) {
   return `${h}h ${m}m`;
 }
 
-function confirmHost() {
-  const select = document.getElementById('employeeSelect');
-  const name   = select.value;
-  if (!name) return;
+function selectEmployee(name) {
   selectedHost = name;
   document.getElementById('hostDisplay').textContent = name;
   showScreen('step2');
