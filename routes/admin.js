@@ -95,7 +95,9 @@ router.post('/settings', requireAuth, (req, res) => {
 const INTEGRATION_KEYS = [
   'slackWebhookUrl', 'n8nWebhookUrl', 'slackBotToken', 'slackChannelEnabled',
   'backupEmailEnabled', 'backupEmailTo', 'backupEmailFrom',
-  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure'
+  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure',
+  'teamsWebhookUrl', 'telegramBotToken', 'telegramChatId',
+  'googleChatWebhookUrl', 'customWebhookUrl', 'customWebhookBody'
 ];
 
 router.get('/integrations', requireAuth, (req, res) => {
@@ -201,6 +203,77 @@ router.post('/integrations/test-n8n', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(502).json({ error: `n8n returned an error: ${err.message}` });
+  }
+});
+
+router.post('/integrations/test-teams', requireAuth, async (req, res) => {
+  const url = db.prepare("SELECT value FROM settings WHERE key = 'teamsWebhookUrl'").get()?.value;
+  if (!url) return res.status(400).json({ error: 'No Teams webhook URL configured.' });
+  try {
+    const axios = require('axios');
+    const body = {
+      type: 'message',
+      attachments: [{
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        content: {
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          type: 'AdaptiveCard',
+          version: '1.2',
+          body: [{ type: 'TextBlock', text: '✅ Test message from Visitor Log — Teams notifications are working!', wrap: true }]
+        }
+      }]
+    };
+    await axios.post(url, body);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Teams returned an error: ${err.message}` });
+  }
+});
+
+router.post('/integrations/test-telegram', requireAuth, async (req, res) => {
+  const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+  const token  = getSetting('telegramBotToken');
+  const chatId = getSetting('telegramChatId');
+  if (!token || !chatId) return res.status(400).json({ error: 'Telegram Bot Token and Chat ID are required.' });
+  try {
+    const axios = require('axios');
+    await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+      chat_id:    chatId,
+      text:       '✅ Test message from Visitor Log — Telegram notifications are working\\!',
+      parse_mode: 'MarkdownV2'
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Telegram returned an error: ${err.message}` });
+  }
+});
+
+router.post('/integrations/test-google-chat', requireAuth, async (req, res) => {
+  const url = db.prepare("SELECT value FROM settings WHERE key = 'googleChatWebhookUrl'").get()?.value;
+  if (!url) return res.status(400).json({ error: 'No Google Chat webhook URL configured.' });
+  try {
+    const axios = require('axios');
+    await axios.post(url, { text: '✅ Test message from Visitor Log — Google Chat notifications are working!' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Google Chat returned an error: ${err.message}` });
+  }
+});
+
+router.post('/integrations/test-custom', requireAuth, async (req, res) => {
+  const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
+  const url  = getSetting('customWebhookUrl');
+  const body = getSetting('customWebhookBody');
+  if (!url)  return res.status(400).json({ error: 'No custom webhook URL configured.' });
+  if (!body) return res.status(400).json({ error: 'No custom webhook body configured.' });
+  try {
+    const axios = require('axios');
+    const testPayload = { firstName: 'Test', lastName: 'Visitor', company: 'Admin Panel', host: 'Test Host', hostSlackId: '' };
+    const interpolated = body.replace(/\{\{(\w+)\}\}/g, (_, k) => testPayload[k] ?? '');
+    await axios.post(url, JSON.parse(interpolated), { headers: { 'Content-Type': 'application/json' } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(502).json({ error: `Custom webhook error: ${err.message}` });
   }
 });
 

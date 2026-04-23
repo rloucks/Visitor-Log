@@ -359,6 +359,84 @@
           </div>
           <p id="backupMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
         </div>
+
+        <div class="card">
+          <h3>Microsoft Teams</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Post visitor arrivals to a Teams channel via an Incoming Webhook. Only used when n8n is not configured.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="teamsWebhookUrl">Webhook URL</label>
+            <input class="admin-input" id="teamsWebhookUrl" type="url" placeholder="https://outlook.office.com/webhook/..." style="max-width:480px;" />
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-white" onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline" onclick="testTeams()">Send Test Message</button>
+          </div>
+          <p id="teamsMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
+
+        <div class="card">
+          <h3>Telegram</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Send visitor notifications to a Telegram chat or group. Only used when n8n is not configured.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="telegramBotToken">Bot Token</label>
+            <input class="admin-input" id="telegramBotToken" type="password" placeholder="123456:ABC-DEF..." style="max-width:480px;" />
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="telegramChatId">Chat ID</label>
+            <input class="admin-input" id="telegramChatId" type="text" placeholder="-100123456789" style="max-width:240px;" />
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-white" onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline" onclick="testTelegram()">Send Test Message</button>
+          </div>
+          <p id="telegramMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
+
+        <div class="card">
+          <h3>Google Chat</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            Post visitor arrivals to a Google Chat space via an Incoming Webhook. Only used when n8n is not configured.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="googleChatWebhookUrl">Webhook URL</label>
+            <input class="admin-input" id="googleChatWebhookUrl" type="url" placeholder="https://chat.googleapis.com/v1/spaces/..." style="max-width:480px;" />
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-white" onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline" onclick="testGoogleChat()">Send Test Message</button>
+          </div>
+          <p id="googleChatMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
+
+        <div class="card">
+          <h3>Custom JSON Webhook</h3>
+          <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">
+            POST a custom JSON payload to any endpoint on check-in. Use <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">&#123;&#123;firstName&#125;&#125;</code>,
+            <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">&#123;&#123;lastName&#125;&#125;</code>,
+            <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">&#123;&#123;company&#125;&#125;</code>,
+            <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">&#123;&#123;host&#125;&#125;</code>,
+            <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;">&#123;&#123;hostSlackId&#125;&#125;</code> as placeholders. Only used when n8n is not configured.
+          </p>
+          <div class="setting-row">
+            <label class="setting-label" for="customWebhookUrl">URL</label>
+            <input class="admin-input" id="customWebhookUrl" type="url" placeholder="https://your-service.com/webhook" style="max-width:480px;" />
+          </div>
+          <div class="setting-row">
+            <label class="setting-label" for="customWebhookBody">JSON Body</label>
+            <textarea class="admin-input" id="customWebhookBody" rows="5"
+              placeholder='{"name":"{{firstName}} {{lastName}}","visitor_of":"{{host}}"}'
+              style="max-width:480px;min-height:100px;resize:vertical;font-family:monospace;font-size:0.82rem;line-height:1.5;"></textarea>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-white" onclick="saveIntegrations()">Save</button>
+            <button class="btn btn-outline" onclick="testCustom()">Send Test Payload</button>
+          </div>
+          <p id="customMsg" style="margin-top:10px;font-size:0.82rem;min-height:18px;"></p>
+        </div>
       </section>
 
       <!-- Settings -->

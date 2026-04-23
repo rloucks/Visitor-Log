@@ -103,49 +103,115 @@ router.post('/checkin', async (req, res) => {
     hostSlackId
   };
 
-  // Read webhook URLs from DB settings, fall back to env vars
+  // Read all integration settings
   const getSetting = key => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value || '';
-  const n8nUrl      = getSetting('n8nWebhookUrl')   || process.env.N8N_WEBHOOK_URL   || '';
-  const slackUrl    = getSetting('slackWebhookUrl') || process.env.SLACK_WEBHOOK_URL || '';
-  const botToken    = getSetting('slackBotToken')   || process.env.SLACK_BOT_TOKEN   || '';
+  const n8nUrl          = getSetting('n8nWebhookUrl')       || process.env.N8N_WEBHOOK_URL    || '';
+  const slackUrl        = getSetting('slackWebhookUrl')     || process.env.SLACK_WEBHOOK_URL  || '';
+  const botToken        = getSetting('slackBotToken')       || process.env.SLACK_BOT_TOKEN    || '';
+  const teamsUrl        = getSetting('teamsWebhookUrl')     || process.env.TEAMS_WEBHOOK_URL  || '';
+  const telegramToken   = getSetting('telegramBotToken')    || process.env.TELEGRAM_BOT_TOKEN || '';
+  const telegramChatId  = getSetting('telegramChatId')      || process.env.TELEGRAM_CHAT_ID   || '';
+  const googleChatUrl   = getSetting('googleChatWebhookUrl')|| process.env.GOOGLE_CHAT_URL    || '';
+  const customUrl       = getSetting('customWebhookUrl')    || '';
+  const customBody      = getSetting('customWebhookBody')   || '';
 
+  // Message variants
   const companyStr  = payload.company ? ` from *${payload.company}*` : '';
+  const companyHtml = payload.company ? ` from **${payload.company}**` : '';
   const hostMention = payload.hostSlackId ? `<@${payload.hostSlackId}>` : `*${payload.host}*`;
   const channelMsg  = `:wave: ${hostMention} has a visitor at the door - *${payload.firstName} ${payload.lastName}*${companyStr}. Please let them know or greet the guest.`;
   const dmMsg       = `:wave: Hello, you have a visitor who just checked in at the door. *${payload.firstName} ${payload.lastName}*${companyStr}.`;
+  const plainMsg    = `👋 ${payload.host} has a visitor at the door — ${payload.firstName} ${payload.lastName}${payload.company ? ' from ' + payload.company : ''}. Please let them know or greet the guest.`;
 
+  // n8n takes full control when configured
   if (n8nUrl) {
-    try {
-      // NOTE: rejectUnauthorized disabled temporarily — cert expired, pending renewal
-      await axios.post(n8nUrl, payload, { httpsAgent: new https.Agent({ rejectUnauthorized: false }) });
-    } catch (err) {
-      console.error('n8n webhook failed:', err.message);
+    // NOTE: rejectUnauthorized disabled temporarily — cert expired, pending renewal
+    await axios.post(n8nUrl, payload, { httpsAgent: new https.Agent({ rejectUnauthorized: false }) })
+      .catch(err => console.error('n8n webhook failed:', err.message));
+  } else {
+    // Fire all configured direct integrations in parallel
+    const sends = [];
+
+    // Slack — DM host, optionally also channel
+    if (botToken && payload.hostSlackId) {
+      sends.push(
+        axios.post('https://slack.com/api/chat.postMessage',
+          { channel: payload.hostSlackId, text: dmMsg },
+          { headers: { Authorization: `Bearer ${botToken}` } }
+        ).catch(err => console.error('Slack DM failed:', err.message))
+      );
+      if (getSetting('slackChannelEnabled') === '1' && slackUrl) {
+        sends.push(
+          axios.post(slackUrl, { text: channelMsg })
+            .catch(err => console.error('Slack channel failed:', err.message))
+        );
+      }
+    } else if (slackUrl) {
+      sends.push(
+        axios.post(slackUrl, { text: channelMsg })
+          .catch(err => console.error('Slack notification failed:', err.message))
+      );
     }
-  } else if (botToken && payload.hostSlackId) {
-    // DM the host directly via Slack API
-    try {
-      await axios.post('https://slack.com/api/chat.postMessage', {
-        channel: payload.hostSlackId,
-        text:    dmMsg
-      }, { headers: { Authorization: `Bearer ${botToken}` } });
-    } catch (err) {
-      console.error('Slack DM failed:', err.message);
+
+    // Microsoft Teams
+    if (teamsUrl) {
+      const teamsBody = {
+        type: 'message',
+        attachments: [{
+          contentType: 'application/vnd.microsoft.card.adaptive',
+          content: {
+            $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+            type: 'AdaptiveCard',
+            version: '1.2',
+            body: [{
+              type: 'TextBlock',
+              text: `👋 **${payload.firstName} ${payload.lastName}**${payload.company ? ' from **' + payload.company + '**' : ''} has arrived to see **${payload.host}**.`,
+              wrap: true
+            }]
+          }
+        }]
+      };
+      sends.push(
+        axios.post(teamsUrl, teamsBody)
+          .catch(err => console.error('Teams notification failed:', err.message))
+      );
     }
-    // Also post to channel if enabled
-    if (getSetting('slackChannelEnabled') === '1' && slackUrl) {
+
+    // Telegram
+    if (telegramToken && telegramChatId) {
+      const telegramText = `👋 *Visitor Check\\-In*\n*${payload.firstName} ${payload.lastName}*${payload.company ? ' from _' + payload.company + '_' : ''} has arrived to see *${payload.host}*\\.`;
+      sends.push(
+        axios.post(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+          chat_id:    telegramChatId,
+          text:       telegramText,
+          parse_mode: 'MarkdownV2'
+        }).catch(err => console.error('Telegram notification failed:', err.message))
+      );
+    }
+
+    // Google Chat
+    if (googleChatUrl) {
+      sends.push(
+        axios.post(googleChatUrl, { text: plainMsg })
+          .catch(err => console.error('Google Chat notification failed:', err.message))
+      );
+    }
+
+    // Custom JSON webhook
+    if (customUrl && customBody) {
       try {
-        await axios.post(slackUrl, { text: channelMsg });
+        const interpolated = customBody.replace(/\{\{(\w+)\}\}/g, (_, k) => payload[k] ?? '');
+        sends.push(
+          axios.post(customUrl, JSON.parse(interpolated), {
+            headers: { 'Content-Type': 'application/json' }
+          }).catch(err => console.error('Custom webhook failed:', err.message))
+        );
       } catch (err) {
-        console.error('Slack channel notify failed:', err.message);
+        console.error('Custom webhook body is invalid JSON:', err.message);
       }
     }
-  } else if (slackUrl) {
-    // Fall back to incoming webhook channel post
-    try {
-      await axios.post(slackUrl, { text: channelMsg });
-    } catch (err) {
-      console.error('Slack notification failed:', err.message);
-    }
+
+    await Promise.all(sends);
   }
 
   res.json({ success: true, visitorId: insertResult.lastInsertRowid });

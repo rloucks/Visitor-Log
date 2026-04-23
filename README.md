@@ -33,10 +33,15 @@ A self-hosted, iPad-friendly visitor kiosk with a full web admin panel. Visitors
 - **Letter-picker host selection** — visitors browse by first initial, then tap a name — no scrolling through long dropdowns
 - **Expected Guests** — pre-add visitors from the admin; they appear as one-tap buttons after the host is selected
 - **Returning visitor auto-fill** — previous visit details (company, host) are recalled automatically by name
-- **Slack notifications** — three delivery modes in priority order:
+- **Multi-platform notifications** — cascading delivery in priority order:
   1. **n8n webhook** — full automation (DMs, channel posts, Google Calendar)
-  2. **Slack Bot Token** — direct DM to the host via Slack API; optionally also posts to a channel
+  2. **Slack Bot Token** — direct DM to the host; optionally also posts to a channel
   3. **Slack Incoming Webhook** — fallback channel post
+  4. **Microsoft Teams** — Adaptive Card to a Teams channel
+  5. **Telegram** — message to a bot chat or group
+  6. **Google Chat** — message to a Chat space
+  7. **Custom JSON webhook** — any endpoint, fully templated payload
+  All direct integrations (2–7) fire in parallel when n8n is not configured.
 - **Kiosk remote refresh** — broadcast a page reload to all connected iPads from the admin panel instantly
 - **Daily backups** — CSV of each day's visits saved automatically at midnight; records older than 365 days are purged; optional email delivery via SMTP
 - **Event Mode** — approved visitor list with one-tap check-in/check-out and automatic stay duration; schedulable by datetime window
@@ -250,7 +255,7 @@ John Doe,john@company.com,
 
 ### Integrations
 
-Notification delivery follows this priority order — the first configured method wins (except the channel toggle, which adds a second delivery on top of the DM).
+Notification delivery follows this priority order. When n8n is configured it handles everything exclusively. Without n8n, all configured direct integrations fire in parallel on each check-in.
 
 #### n8n Webhook *(highest priority)*
 
@@ -293,6 +298,57 @@ Message format:
 > 👋 @Richard has a visitor at the door - **Jane Smith** from **Acme Corp**. Please let them know or greet the guest.
 
 Click **Send Test Message** to verify the webhook is working.
+
+#### Microsoft Teams *(channel notification)*
+
+Paste a Teams Incoming Webhook URL. Visitor arrivals are posted as an Adaptive Card. Only used when n8n is not configured.
+
+To create a Teams webhook: open a channel → **Connectors** → **Incoming Webhook** → configure and copy the URL.
+
+Click **Send Test Message** to confirm delivery.
+
+#### Telegram *(chat or group notification)*
+
+Enter a Telegram Bot Token and Chat ID. Visitor arrivals are sent as a formatted message. Only used when n8n is not configured.
+
+To set up:
+1. Message `@BotFather` on Telegram → `/newbot` → copy the token
+2. Add the bot to your chat or group, then get the Chat ID from `api.telegram.org/bot<TOKEN>/getUpdates`
+
+Click **Send Test Message** to confirm delivery.
+
+#### Google Chat *(space notification)*
+
+Paste a Google Chat Incoming Webhook URL. Visitor arrivals are posted as a plain text message. Only used when n8n is not configured.
+
+To create a Google Chat webhook: open a Space → **Apps & integrations** → **Webhooks** → **Add webhook** → copy the URL.
+
+Click **Send Test Message** to confirm delivery.
+
+#### Custom JSON Webhook
+
+POST a fully custom JSON payload to any HTTP endpoint on each check-in. Only used when n8n is not configured.
+
+Use `{{placeholder}}` syntax in the body to inject visitor data:
+
+| Placeholder | Value |
+|---|---|
+| `{{firstName}}` | Visitor's first name |
+| `{{lastName}}` | Visitor's last name |
+| `{{company}}` | Visitor's company |
+| `{{host}}` | Host's name |
+| `{{hostSlackId}}` | Host's Slack User ID |
+
+Example body:
+```json
+{
+  "visitor": "{{firstName}} {{lastName}}",
+  "company": "{{company}}",
+  "visiting": "{{host}}"
+}
+```
+
+Click **Send Test Payload** to fire a test request with dummy values.
 
 #### Backups & Email
 

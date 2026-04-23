@@ -593,6 +593,12 @@ async function loadIntegrations() {
     document.getElementById('smtpUser').value           = data.smtpUser           || '';
     document.getElementById('smtpPass').value           = data.smtpPass           || '';
     document.getElementById('smtpSecure').checked       = data.smtpSecure         === '1';
+    document.getElementById('teamsWebhookUrl').value    = data.teamsWebhookUrl    || '';
+    document.getElementById('telegramBotToken').value   = data.telegramBotToken   || '';
+    document.getElementById('telegramChatId').value     = data.telegramChatId     || '';
+    document.getElementById('googleChatWebhookUrl').value = data.googleChatWebhookUrl || '';
+    document.getElementById('customWebhookUrl').value   = data.customWebhookUrl   || '';
+    document.getElementById('customWebhookBody').value  = data.customWebhookBody  || '';
 
     const employees = await empRes.json();
     const sel = document.getElementById('dmTestEmployee');
@@ -622,6 +628,12 @@ async function saveIntegrations() {
   const smtpUser           = document.getElementById('smtpUser').value.trim();
   const smtpPass           = document.getElementById('smtpPass').value.trim();
   const smtpSecure         = document.getElementById('smtpSecure').checked ? '1' : '0';
+  const teamsWebhookUrl    = document.getElementById('teamsWebhookUrl').value.trim();
+  const telegramBotToken   = document.getElementById('telegramBotToken').value.trim();
+  const telegramChatId     = document.getElementById('telegramChatId').value.trim();
+  const googleChatWebhookUrl = document.getElementById('googleChatWebhookUrl').value.trim();
+  const customWebhookUrl   = document.getElementById('customWebhookUrl').value.trim();
+  const customWebhookBody  = document.getElementById('customWebhookBody').value.trim();
   const msgEl = document.getElementById('integrationMsg');
 
   const res = await fetch('/api/admin/integrations', {
@@ -630,7 +642,9 @@ async function saveIntegrations() {
     body: JSON.stringify({
       n8nWebhookUrl, slackBotToken, slackWebhookUrl, slackChannelEnabled,
       backupEmailEnabled, backupEmailTo, backupEmailFrom,
-      smtpHost, smtpPort, smtpUser, smtpPass, smtpSecure
+      smtpHost, smtpPort, smtpUser, smtpPass, smtpSecure,
+      teamsWebhookUrl, telegramBotToken, telegramChatId,
+      googleChatWebhookUrl, customWebhookUrl, customWebhookBody
     })
   });
 
@@ -733,6 +747,70 @@ async function testSlack() {
   if (res.ok) {
     msgEl.style.color = '#4caf82';
     msgEl.textContent = 'Test message sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
+async function testTeams() {
+  const msgEl = document.getElementById('teamsMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/test-teams', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test message sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
+async function testTelegram() {
+  const msgEl = document.getElementById('telegramMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/test-telegram', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test message sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
+async function testGoogleChat() {
+  const msgEl = document.getElementById('googleChatMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/test-google-chat', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test message sent successfully.';
+  } else {
+    const d = await res.json();
+    msgEl.style.color = '#e05555';
+    msgEl.textContent = d.error || 'Test failed.';
+  }
+}
+
+async function testCustom() {
+  const msgEl = document.getElementById('customMsg');
+  msgEl.style.color = 'rgba(255,255,255,0.4)';
+  msgEl.textContent = 'Sending…';
+  await saveIntegrations();
+  const res = await fetch('/api/admin/integrations/test-custom', { method: 'POST' });
+  if (res.ok) {
+    msgEl.style.color = '#4caf82';
+    msgEl.textContent = 'Test payload sent successfully.';
   } else {
     const d = await res.json();
     msgEl.style.color = '#e05555';
