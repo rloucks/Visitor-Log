@@ -133,6 +133,10 @@
             <select class="admin-input" id="egHost" style="max-width:220px;">
               <option value="">— Visiting —</option>
             </select>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <label style="font-size:0.72rem;color:rgba(255,255,255,0.35);">Repeat Until (optional)</label>
+              <input class="admin-input" id="egRepeatUntil" type="date" style="max-width:160px;" />
+            </div>
             <button class="btn btn-white" onclick="addExpectedGuest()">Add</button>
           </div>
         </div>
@@ -148,6 +152,7 @@
                   <th>Name</th>
                   <th>Company</th>
                   <th>Visiting</th>
+                  <th>Repeat Until</th>
                   <th>Status</th>
                   <th style="width:60px;"></th>
                 </tr>

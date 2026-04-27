@@ -61,12 +61,25 @@ router.get('/returning', (req, res) => {
   res.json(visitor || null);
 });
 
-// Expected guests — only pending (not yet checked in), optionally filtered by host
+// Expected guests — show guests not yet checked in today; multi-day repeats re-appear each day
 router.get('/expected-guests', (req, res) => {
   const { host } = req.query;
+  // Show a guest if:
+  //   (a) they haven't checked in yet, OR they're a repeat guest who checked in on a previous day
+  //   AND (b) they're still within their repeat window (repeatUntil null = single-day)
+  const sql = `
+    SELECT * FROM expected_guests
+    WHERE (
+      checkedIn = 0
+      OR (repeatUntil IS NOT NULL AND date(lastCheckedInDate) < date('now'))
+    )
+    AND (repeatUntil IS NULL OR date(repeatUntil) >= date('now'))
+    ${host ? "AND LOWER(host) = LOWER(?)" : ""}
+    ORDER BY createdAt ASC
+  `;
   const guests = host
-    ? db.prepare('SELECT * FROM expected_guests WHERE checkedIn = 0 AND LOWER(host) = LOWER(?) ORDER BY createdAt ASC').all(host)
-    : db.prepare('SELECT * FROM expected_guests WHERE checkedIn = 0 ORDER BY createdAt ASC').all();
+    ? db.prepare(sql).all(host)
+    : db.prepare(sql).all();
   res.json(guests);
 });
 
@@ -86,9 +99,10 @@ router.post('/checkin', async (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim(), stayHours, stayMinutes);
 
-  // Mark expected guest as checked in
+  // Mark expected guest as checked in (track date for multi-day repeat logic)
   if (expectedGuestId) {
-    db.prepare('UPDATE expected_guests SET checkedIn = 1 WHERE id = ?').run(expectedGuestId);
+    const today = new Date().toISOString().slice(0, 10);
+    db.prepare('UPDATE expected_guests SET checkedIn = 1, lastCheckedInDate = ? WHERE id = ?').run(today, expectedGuestId);
   }
 
   // Look up the host's Slack user ID from employees table

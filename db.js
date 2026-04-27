@@ -138,5 +138,8 @@ try { db.prepare('ALTER TABLE visitors ADD COLUMN stayHours INTEGER NOT NULL DEF
 try { db.prepare('ALTER TABLE visitors ADD COLUMN stayMinutes INTEGER NOT NULL DEFAULT 0').run(); } catch {}
 try { db.prepare('ALTER TABLE visitors ADD COLUMN checkOut DATETIME').run(); } catch {}
 try { db.prepare('ALTER TABLE visitors ADD COLUMN photoPath TEXT').run(); } catch {}
+// Expected guests: multi-day repeat support
+try { db.prepare('ALTER TABLE expected_guests ADD COLUMN repeatUntil TEXT').run(); } catch {}
+try { db.prepare('ALTER TABLE expected_guests ADD COLUMN lastCheckedInDate TEXT').run(); } catch {}
 
 module.exports = db;

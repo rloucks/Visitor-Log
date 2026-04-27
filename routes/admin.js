@@ -463,13 +463,13 @@ router.get('/expected-guests', requireAuth, (req, res) => {
 });
 
 router.post('/expected-guests', requireAuth, (req, res) => {
-  const { firstName, lastName, company, host } = req.body;
+  const { firstName, lastName, company, host, repeatUntil } = req.body;
   if (!firstName?.trim() || !lastName?.trim() || !host?.trim()) {
     return res.status(400).json({ error: 'First name, last name, and host are required.' });
   }
   const result = db.prepare(
-    'INSERT INTO expected_guests (firstName, lastName, company, host) VALUES (?, ?, ?, ?)'
-  ).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim());
+    'INSERT INTO expected_guests (firstName, lastName, company, host, repeatUntil) VALUES (?, ?, ?, ?, ?)'
+  ).run(firstName.trim(), lastName.trim(), company?.trim() || null, host.trim(), repeatUntil?.trim() || null);
   res.json({ success: true, id: result.lastInsertRowid });
 });
 

@@ -843,16 +843,43 @@ async function loadExpectedGuests() {
     const tbody = document.querySelector('#expectedGuestTable tbody');
     tbody.innerHTML = '';
     if (!guests.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:24px;">No expected guests.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.3);padding:24px;">No expected guests.</td></tr>';
       return;
     }
+    const today = new Date().toISOString().slice(0, 10);
     guests.forEach(g => {
+      // Determine status label and colour
+      let statusText, statusColor;
+      if (g.repeatUntil && g.repeatUntil < today) {
+        statusText  = 'Expired';
+        statusColor = 'rgba(255,255,255,0.25)';
+      } else if (g.checkedIn && !g.repeatUntil) {
+        statusText  = 'Checked In ✓';
+        statusColor = '#4caf82';
+      } else if (g.checkedIn && g.repeatUntil) {
+        if (g.lastCheckedInDate === today) {
+          statusText  = 'Checked In Today ✓';
+          statusColor = '#4caf82';
+        } else {
+          statusText  = 'Pending (Repeat)';
+          statusColor = 'rgba(255,255,255,0.55)';
+        }
+      } else {
+        statusText  = 'Pending';
+        statusColor = 'rgba(255,255,255,0.4)';
+      }
+
+      const repeatLabel = g.repeatUntil
+        ? `<span style="font-size:0.82rem;">${esc(g.repeatUntil)}</span>`
+        : '<span style="color:rgba(255,255,255,0.25);">—</span>';
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${esc(g.firstName)} ${esc(g.lastName)}</td>
         <td>${esc(g.company || '—')}</td>
         <td>${esc(g.host)}</td>
-        <td><span style="color:${g.checkedIn ? '#4caf82' : 'rgba(255,255,255,0.4)'};">${g.checkedIn ? 'Checked In ✓' : 'Pending'}</span></td>
+        <td>${repeatLabel}</td>
+        <td><span style="color:${statusColor};">${statusText}</span></td>
         <td></td>
       `;
       const delBtn = document.createElement('button');
@@ -868,10 +895,11 @@ async function loadExpectedGuests() {
 }
 
 async function addExpectedGuest() {
-  const firstName = document.getElementById('egFirstName').value.trim();
-  const lastName  = document.getElementById('egLastName').value.trim();
-  const company   = document.getElementById('egCompany').value.trim();
-  const host      = document.getElementById('egHost').value;
+  const firstName   = document.getElementById('egFirstName').value.trim();
+  const lastName    = document.getElementById('egLastName').value.trim();
+  const company     = document.getElementById('egCompany').value.trim();
+  const host        = document.getElementById('egHost').value;
+  const repeatUntil = document.getElementById('egRepeatUntil').value;
 
   if (!firstName || !lastName || !host) {
     showToast('First name, last name, and host are required.', 'error');
@@ -881,11 +909,11 @@ async function addExpectedGuest() {
   const res = await fetch('/api/admin/expected-guests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName, lastName, company, host })
+    body: JSON.stringify({ firstName, lastName, company, host, repeatUntil })
   });
 
   if (res.ok) {
-    ['egFirstName','egLastName','egCompany'].forEach(id => document.getElementById(id).value = '');
+    ['egFirstName','egLastName','egCompany','egRepeatUntil'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('egHost').value = '';
     showToast('Expected guest added.');
     loadExpectedGuests();
